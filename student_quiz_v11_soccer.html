@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>算数で日本語を学ぼう！⚽ワールドカップ編</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; overflow-x: hidden; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+
+    // SVGイラスト（サッカーテーマ）
+    const illustrations = {
+      1: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="30" width="70" height="45" rx="4" fill="#1a3a6b"/><rect x="5" y="30" width="70" height="8" fill="#0d47a1"/><circle cx="40" cy="55" r="14" fill="white" stroke="#ddd" strokeWidth="1"/><polygon points="40,42 44,50 40,54 36,50" fill="#1a1a1a"/><polygon points="27,49 33,47 36,50 34,56 26,56" fill="#1a1a1a"/><polygon points="53,49 47,47 44,50 46,56 54,56" fill="#1a1a1a"/><text x="40" y="78" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">💰 Prize Money</text></svg>),
+      2: (<svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="38" r="22" fill="white" stroke="#333" strokeWidth="1.5"/><polygon points="40,18 46,25 43,34 37,34 34,25" fill="#1a1a1a"/><polygon points="20,29 27,25 34,34 29,42 19,41" fill="#1a1a1a"/><polygon points="60,29 53,25 46,34 51,42 61,41" fill="#1a1a1a"/><polygon points="29,55 30,42 37,34 43,34 50,42 51,55 40,58" fill="#1a1a1a"/><text x="40" y="72" textAnchor="middle" fontSize="8" fill="#1a3a6b" fontWeight="bold">🇫🇷 Mbappé</text></svg>),
+      3: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="50" width="70" height="25" rx="2" fill="#006400"/><rect x="5" y="50" width="70" height="5" fill="#004d00"/><ellipse cx="40" cy="35" rx="18" ry="22" fill="#ffcc80"/><ellipse cx="40" cy="30" rx="12" ry="13" fill="#ffb74d"/><circle cx="34" cy="27" r="2.5" fill="#1a1a1a"/><circle cx="46" cy="27" r="2.5" fill="#1a1a1a"/><rect x="25" y="52" width="30" height="20" rx="2" fill="#gold"/><text x="40" y="66" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">🇦🇺 Leckie</text></svg>),
+      4: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="50" width="70" height="25" rx="2" fill="#1b5e20"/><circle cx="40" cy="35" r="22" fill="white" stroke="#333" strokeWidth="1.5"/><polygon points="40,15 46,22 43,31 37,31 34,22" fill="#1a1a1a"/><polygon points="20,26 27,22 34,31 29,39 19,38" fill="#1a1a1a"/><polygon points="60,26 53,22 46,31 51,39 61,38" fill="#1a1a1a"/><text x="40" y="72" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">🇳🇴 Haaland Shot!</text></svg>),
+      5: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="5" width="70" height="70" rx="6" fill="#e8f5e9" stroke="#43a047" strokeWidth="2"/><text x="40" y="25" textAnchor="middle" fontSize="11" fill="#1a3a6b" fontWeight="bold">48 Teams</text><text x="40" y="40" textAnchor="middle" fontSize="9" fill="#333">× 26 players</text><text x="40" y="54" textAnchor="middle" fontSize="11" fill="#e65100" fontWeight="bold">= ? 人</text><text x="40" y="68" textAnchor="middle" fontSize="9" fill="#43a047">⚽ 2026 World Cup</text></svg>),
+      6: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="8" y="15" width="64" height="50" rx="2" fill="none" stroke="#1a3a6b" strokeWidth="3"/><rect x="8" y="15" width="64" height="6" fill="#1a3a6b"/><rect x="8" y="15" width="5" height="50" fill="#1a3a6b"/><rect x="67" y="15" width="5" height="50" fill="#1a3a6b"/><line x1="40" y1="15" x2="40" y2="65" stroke="#ccc" strokeWidth="1" strokeDasharray="3,2"/><circle cx="40" cy="40" r="12" fill="none" stroke="#ccc" strokeWidth="1"/><text x="40" y="74" textAnchor="middle" fontSize="8" fill="#1a3a6b" fontWeight="bold">Group Stage</text></svg>),
+      7: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="50" width="70" height="25" rx="2" fill="#1b5e20"/><ellipse cx="40" cy="32" rx="20" ry="24" fill="#ffcc80"/><ellipse cx="40" cy="26" rx="13" ry="14" fill="#ffb74d"/><circle cx="33" cy="23" r="2.5" fill="#1a1a1a"/><circle cx="47" cy="23" r="2.5" fill="#1a1a1a"/><text x="40" y="72" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">🇳🇴 Haaland 16G!</text></svg>),
+      8: (<svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="35" r="25" fill="#e3f2fd" stroke="#1a73e8" strokeWidth="2"/><line x1="15" y1="35" x2="65" y2="35" stroke="#1a73e8" strokeWidth="1" strokeDasharray="3,2"/><line x1="40" y1="10" x2="40" y2="60" stroke="#e53935" strokeWidth="2"/><text x="52" y="28" fontSize="8" fill="#1a73e8">90分</text><text x="22" y="28" fontSize="8" fill="#e65100">延長</text><text x="40" y="72" textAnchor="middle" fontSize="8" fill="#1a3a6b" fontWeight="bold">⏱️ Game Time</text></svg>),
+      9: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="10" y="20" width="60" height="40" rx="4" fill="#1565c0"/><rect x="15" y="25" width="20" height="30" rx="2" fill="#42a5f5"/><rect x="45" y="25" width="20" height="30" rx="2" fill="#42a5f5"/><circle cx="40" cy="40" r="8" fill="white" stroke="#90caf9" strokeWidth="1"/><text x="40" y="44" textAnchor="middle" fontSize="8" fill="#1565c0" fontWeight="bold">¥</text><text x="40" y="72" textAnchor="middle" fontSize="8" fill="#1a3a6b" fontWeight="bold">🎫 Family Ticket</text></svg>),
+      10: (<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="50" width="70" height="25" rx="2" fill="#1b5e20"/><ellipse cx="40" cy="30" rx="18" ry="22" fill="#ffcc80"/><ellipse cx="40" cy="24" rx="12" ry="13" fill="#ffb74d"/><circle cx="34" cy="21" r="2.5" fill="#1a1a1a"/><circle cx="46" cy="21" r="2.5" fill="#1a1a1a"/><text x="40" y="46" textAnchor="middle" fontSize="8" fill="#e65100" fontWeight="bold">引退</text><text x="40" y="72" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">🇦🇷 Messi Legend</text></svg>),
+    };
+
+
+    // 漢字SVGイラスト（サッカーテーマ）
+    const kanjiIllustrations = {
+      k1: ( // 足 → サッカーシューズ
+        <svg viewBox="0 0 80 60" width="80" height="60">
+          <ellipse cx="45" cy="38" rx="28" ry="14" fill="#1a237e"/>
+          <ellipse cx="48" cy="34" rx="24" ry="10" fill="#283593"/>
+          <rect x="20" y="24" width="12" height="20" rx="4" fill="#283593"/>
+          <ellipse cx="26" cy="24" rx="6" ry="5" fill="#3949ab"/>
+          <line x1="30" y1="30" x2="65" y2="32" stroke="white" strokeWidth="1.5"/>
+          <line x1="32" y1="36" x2="67" y2="38" stroke="white" strokeWidth="1.5"/>
+          <ellipse cx="68" cy="40" rx="6" ry="5" fill="#1a237e"/>
+        </svg>
+      ),
+      k2: ( // 球 → サッカーボール
+        <svg viewBox="0 0 80 60" width="80" height="60">
+          <circle cx="40" cy="30" r="24" fill="white" stroke="#333" strokeWidth="1.5"/>
+          <polygon points="40,10 48,18 44,28 36,28 32,18" fill="#1a1a1a"/>
+          <polygon points="16,22 24,18 32,28 26,38 14,36" fill="#1a1a1a"/>
+          <polygon points="64,22 56,18 48,28 54,38 66,36" fill="#1a1a1a"/>
+          <polygon points="26,50 28,38 36,28 44,28 52,38 54,50 40,54" fill="#1a1a1a"/>
+        </svg>
+      ),
+      k3: ( // 得点 → ゴール
+        <svg viewBox="0 0 80 60" width="80" height="60">
+          <rect x="8" y="10" width="64" height="40" rx="2" fill="none" stroke="#1a3a6b" strokeWidth="3"/>
+          <rect x="8" y="10" width="64" height="5" fill="#1a3a6b"/>
+          <rect x="8" y="10" width="5" height="40" fill="#1a3a6b"/>
+          <rect x="67" y="10" width="5" height="40" fill="#1a3a6b"/>
+          <circle cx="40" cy="32" r="10" fill="#f9ff00" stroke="#f57f17" strokeWidth="2"/>
+          <text x="40" y="37" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#e65100">⚽</text>
+          <text x="40" y="56" textAnchor="middle" fontSize="9" fill="#1a3a6b" fontWeight="bold">GOAL!</text>
+        </svg>
+      ),
+    };
+
+    const QUIZ_META = { week: 1, grade: 4, jp_level: "beginner", theme: "⚽ 2026 FIFAワールドカップ" };
+
+    const questions = [
+      { id:1, question_type:"handwrite", category:"⚽ Money", jp:"ワールドカップで1位になったチームには5000万ドルのしょうきんが出ます。1ドルを150円とすると、しょうきんは何円ですか？", reading:"わーるどかっぷで いちいに なった ちーむには ごせんまんどるの しょうきんが でます。いちどるを ひゃくごじゅうえんとすると、しょうきんは なんえんですか？", en:"The World Cup winning team gets $50 million. If 1 dollar = 150 yen, how many yen is the prize?", answer_key:7500000000, unit:"円", words:[{word:"しょうきん（賞金）",meaning:"prize money",example:"しょうきん = prize money"},{word:"winning team",meaning:"1位になったチーム",example:"The winning team = 1位のチーム"}]},
+      { id:2, question_type:"handwrite", category:"⚽ Goals", jp:"ムバッペ（フランス）はフランスの代表チームで56ゴールをきめています。1試合（しあい）で平均（へいきん）0.7ゴールとすると、56ゴールに何試合かかりますか？（小数第1位を四捨五入）", reading:"むばっぺは ふらんすの だいひょうちーむで ごじゅうろくごーるを きめています。いちしあいで へいきん ぜろてんしちごーると すると、ごじゅうろくごーるに なんしあい かかりますか？", en:"Mbappé has scored 56 goals for France. At 0.7 goals per game on average, how many games did it take?", answer_key:80, unit:"試合", words:[{word:"平均（へいきん）",meaning:"average",example:"1試合平均 = per game average"},{word:"on average",meaning:"平均して",example:"0.7 goals on average = へいきん0.7ゴール"}]},
+      { id:3, question_type:"handwrite", category:"⚽ Distance", jp:"オーストラリアのマシュー・レッキー（Mathew Leckie）はドリブルで1びょうに7m走（はし）ります。コートのはしからはしまでは70mです。何びょうかかりますか？", reading:"おーすとらりあの ましゅー れっきーは どりぶるで いちびょうに ななめーとる はしります。こーとの はしから はしまでは ななじゅうめーとるです。なんびょう かかりますか？", en:"Australia's Mathew Leckie dribbles 7 meters per second. The field is 70 meters end to end. How many seconds?", answer_key:10, unit:"秒", words:[{word:"ドリブル",meaning:"dribble",example:"ドリブルで走る = run with the ball"},{word:"end to end",meaning:"はしからはしまで",example:"70 meters end to end = はしからはしまで70m"}]},
+      { id:4, question_type:"handwrite", category:"⚽ Speed", jp:"ハーランド（ノルウェー）のシュートのはやさは時速（じそく）120kmです。ゴールまでの長さが20mのとき、ボールがゴールに着（つ）くまで何びょうかかりますか？（時速をm/びょうに直してね）", reading:"はーらんどの しゅーとの はやさは じそく ひゃくにじゅっきろです。ごーるまでの ながさが にじゅうめーとるの とき、ぼーるが ごーるに つくまで なんびょう かかりますか？", en:"Haaland's shot speed is 120 km/h. The goal is 20 meters away. How many seconds does it take?", answer_key:0.6, unit:"秒", words:[{word:"時速（じそく）",meaning:"speed per hour (km/h)",example:"時速120km = 120 km per hour"},{word:"speed",meaning:"はやさ",example:"shot speed = シュートのはやさ"}]},
+      { id:5, question_type:"handwrite", category:"⚽ Players", jp:"2026ワールドカップには48チームが出ます。1チームに26人の選手（せんしゅ）がいます。全部で何人の選手が出ますか？", reading:"にせんにじゅうろく わーるどかっぷには よんじゅうはちちーむが でます。いちちーむに にじゅうろくにんの せんしゅが います。ぜんぶで なんにんの せんしゅが でますか？", en:"48 teams join the 2026 World Cup. Each team has 26 players. How many players in total?", answer_key:1248, unit:"人", words:[{word:"選手（せんしゅ）",meaning:"player / athlete",example:"サッカー選手 = soccer player"},{word:"in total",meaning:"全部で",example:"1,248 players in total = 全部で1248人"}]},
+      { id:6, question_type:"handwrite", category:"⚽ Games", jp:"グループステージでは1チームが3試合（しあい）をします。48チームが出るとき、グループステージの試合は全部で何試合ありますか？（1試合に2チームが出ます）", reading:"ぐるーぷすてーじでは いちちーむが さんしあいを します。よんじゅうはちちーむが でるとき、ぐるーぷすてーじの しあいは ぜんぶで なんしあい ありますか？", en:"Each team plays 3 group stage games. With 48 teams, how many games in total?", answer_key:72, unit:"試合", words:[{word:"グループステージ",meaning:"group stage",example:"グループステージ = first round"},{word:"group stage",meaning:"グループステージ",example:"group stage games = グループステージの試合"}]},
+      { id:7, question_type:"handwrite", category:"⚽ Stats", jp:"ワールドカップのよせんでハーランドは16ゴールを入れました。ノルウェーは10試合（しあい）をしました。1試合あたり平均（へいきん）何ゴールですか？", reading:"わーるどかっぷの よせんで はーらんどは じゅうろくごーるを いれました。のるうぇーは じゅっしあいを しました。いちしあいあたり へいきん なんごーるですか？", en:"Haaland scored 16 goals in qualifying. Norway played 10 games. How many goals per game on average?", answer_key:1.6, unit:"ゴール", words:[{word:"よせん（予選）",meaning:"qualifying round",example:"ワールドカップのよせん = World Cup qualifying"},{word:"per game",meaning:"1試合あたり",example:"1.6 goals per game = 1試合あたり1.6ゴール"}]},
+      { id:8, question_type:"handwrite", category:"⚽ Time", jp:"ワールドカップの1試合（しあい）は90分です。えんちょう戦（せん）は前半（ぜんはん）15分・後半（こうはん）15分です。えんちょう戦まで行ったとき、試合は全部で何分ですか？", reading:"わーるどかっぷの いちしあいは きゅうじゅっぷんです。えんちょうせんは ぜんはん じゅうごふん こうはん じゅうごふんです。えんちょうせんまで いったとき、しあいは ぜんぶで なんぷんですか？", en:"A World Cup game is 90 minutes. Extra time is 15+15 minutes. How long is the full game with extra time?", answer_key:120, unit:"分", words:[{word:"えんちょう戦（延長戦）",meaning:"extra time",example:"えんちょう戦 = extra time"},{word:"extra time",meaning:"えんちょう戦",example:"extra time = えんちょう戦"}]},
+      { id:9, question_type:"handwrite", category:"⚽ Money", jp:"ワールドカップのチケットが1まい2万円です。家族（かぞく）4人で見るとき、合計（ごうけい）いくらですか？", reading:"わーるどかっぷの ちけっとが いちまい にまんえんです。かぞく よにんで みるとき、ごうけい いくらですか？", en:"A World Cup ticket costs 20,000 yen. How much for a family of 4?", answer_key:80000, unit:"円", words:[{word:"家族（かぞく）",meaning:"family",example:"家族4人 = family of four"},{word:"ticket",meaning:"チケット",example:"1 ticket = チケット1まい"}]},
+      { id:10, question_type:"handwrite", category:"⚽ Distance", jp:"メッシ（アルゼンチン）は1試合（しあい）で12km走（はし）ります。グループステージの3試合では合計（ごうけい）何km走りますか？", reading:"めっしは いちしあいで じゅうにきろ はしります。ぐるーぷすてーじの さんしあいでは ごうけい なんきろ はしりますか？", en:"Messi runs 12km per game. How many km in total for 3 group stage games?", answer_key:36, unit:"km", words:[{word:"合計（ごうけい）",meaning:"total",example:"合計36km = 36km in total"},{word:"per game",meaning:"1試合で",example:"12km per game = 1試合で12km"}]},
+    ];
+
+    const kanjiQuiz = [
+      { id:"k1", en:"foot / leg", hiragana:"あし", correct:"足", choices:["足","走","歩"], hint:"We kick the ball with this! ⚽" },
+      { id:"k2", en:"ball", hiragana:"きゅう・たま", correct:"球", choices:["球","玉","丸"], hint:"Soccer ball, baseball... 🏀" },
+      { id:"k3", en:"score / points", hiragana:"とくてん", correct:"得点", choices:["得点","取点","得分"], hint:"Mbappé loves this! ⚽🎯" },
+    ];
+
+    function DrawCanvas({ id, height = 80, label = "✏️ 書いてみよう！/ Let's write it!", canvasRef: externalRef }) {
+      const internalRef = React.useRef(null);
+      const canvasRef = externalRef || internalRef;
+      const isDrawing = React.useRef(false);
+      const lastPos = React.useRef(null);
+      const [hasDrawing, setHasDrawing] = React.useState(false);
+
+      React.useEffect(() => {
+        const canvas = canvasRef.current;
+        const handleTouchStart = (e) => { e.preventDefault(); isDrawing.current = true; lastPos.current = getPos(e, canvas); setHasDrawing(true); };
+        const handleTouchMove = (e) => {
+          e.preventDefault();
+          if (!isDrawing.current) return;
+          const ctx = canvas.getContext("2d");
+          const pos = getPos(e, canvas);
+          ctx.beginPath(); ctx.moveTo(lastPos.current.x, lastPos.current.y); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+          lastPos.current = pos;
+        };
+        const handleTouchEnd = (e) => { e.preventDefault(); isDrawing.current = false; };
+        canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+        return () => {
+          canvas.removeEventListener("touchstart", handleTouchStart);
+          canvas.removeEventListener("touchmove", handleTouchMove);
+          canvas.removeEventListener("touchend", handleTouchEnd);
+        };
+      }, []);
+
+      React.useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fffde7";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#1a237e";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }, []);
+
+      const getPos = (e, canvas) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        if (e.touches) return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+        return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+      };
+
+      const startDraw = (e) => { e.preventDefault(); isDrawing.current = true; lastPos.current = getPos(e, canvasRef.current); setHasDrawing(true); };
+      const draw = (e) => {
+        e.preventDefault();
+        if (!isDrawing.current) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        const pos = getPos(e, canvas);
+        ctx.beginPath(); ctx.moveTo(lastPos.current.x, lastPos.current.y); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+        lastPos.current = pos;
+      };
+      const stopDraw = (e) => { e.preventDefault(); isDrawing.current = false; };
+
+      const clear = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fffde7";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        setHasDrawing(false);
+      };
+
+      return (
+        <div style={{ marginTop: 10 }}>
+          <p style={{ fontSize: 12, color: "#5c6bc0", fontWeight: "bold", margin: "0 0 6px 0" }}>{label}</p>
+          <canvas ref={canvasRef} width={400} height={height * 5}
+            onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+            style={{ width: "100%", height: height, border: "2px dashed #9fa8da", borderRadius: 10, background: "#fffde7", display: "block", touchAction: "none", cursor: "crosshair", WebkitUserSelect: "none", userSelect: "none" }}
+          />
+          {hasDrawing && (
+            <button onClick={clear} style={{ marginTop: 6, background: "#f5f5f5", border: "1px solid #ddd", color: "#666", padding: "4px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>
+              🗑️ Clear
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      const [showHint, setShowHint] = React.useState({});
+      const [showWords, setShowWords] = React.useState({});
+      const [speaking, setSpeaking] = React.useState({});
+      const [kanjiAnswers, setKanjiAnswers] = React.useState({});
+      const [submitted, setSubmitted] = React.useState(false);
+
+      // canvasのrefを問題ごとに管理
+      const nameCanvasRef = React.useRef(null);
+      const eqRefs = React.useRef({});
+      const ansRefs = React.useRef({});
+      const kanjiRefs = React.useRef({});
+      questions.forEach(q => {
+        if (!eqRefs.current[q.id]) eqRefs.current[q.id] = React.createRef();
+        if (!ansRefs.current[q.id]) ansRefs.current[q.id] = React.createRef();
+      });
+      kanjiQuiz.forEach(k => {
+        if (!kanjiRefs.current[k.id]) kanjiRefs.current[k.id] = React.createRef();
+      });
+
+      const handleSpeak = (id, text, reading) => {
+        setSpeaking(prev => ({ ...prev, [id]: true }));
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(reading || text);
+        utter.lang = "ja-JP"; utter.rate = 1.0; utter.pitch = 1.0;
+        utter.onend = () => setSpeaking(prev => ({ ...prev, [id]: false }));
+        window.speechSynthesis.speak(utter);
+      };
+
+      const handleKanji = (id, choice, correct) => {
+        if (kanjiAnswers[id]) return;
+        setKanjiAnswers(prev => ({ ...prev, [id]: choice }));
+      };
+
+      // Supabase設定
+      const SUPABASE_URL = "https://upmflhdbhbyzoeldrvvw.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+
+      const [submitting, setSubmitting] = React.useState(false);
+      const [submitError, setSubmitError] = React.useState(null);
+
+      const handleSubmit = async () => {
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+          const nameCanvas = nameCanvasRef.current?.toDataURL("image/png") || null;
+          const questionData = questions.map(q => ({
+            id: q.id,
+            category: q.category,
+            equation_canvas: eqRefs.current[q.id]?.current?.toDataURL("image/png") || null,
+            answer_canvas: ansRefs.current[q.id]?.current?.toDataURL("image/png") || null,
+          }));
+          const kanjiData = kanjiQuiz.map(k => ({
+            id: k.id,
+            selected: kanjiAnswers[k.id] || null,
+            correct: k.correct,
+            canvas: kanjiRefs.current[k.id]?.current?.toDataURL("image/png") || null,
+          }));
+
+          const payload = {
+            student_name: "（手書き）",
+            week: QUIZ_META.week,
+            grade: QUIZ_META.grade,
+            name_canvas: nameCanvas,
+            questions: { math: questionData, kanji: kanjiData },
+            grammar_score: null,
+            listening_score: null,
+            vocab_score: null,
+            english_opened_count: null,
+            submitted_at: new Date().toISOString(),
+          };
+
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Prefer": "return=minimal",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if(!res.ok) throw new Error(`Error: ${res.status}`);
+          setSubmitted(true);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch(e) {
+          setSubmitError(e.message);
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      // 提出確認画面
+      if (submitted) {
+        return (
+          <div style={{ minHeight: "100vh", background: "#f0f4ff", paddingBottom: 60, width: "100%", overflowX: "hidden" }}>
+            <div style={{ background: "linear-gradient(135deg, #1a73e8, #0d47a1)", color: "white", padding: "20px 16px 16px" }}>
+              <h1 style={{ fontSize: 18, fontWeight: "bold", margin: "0 0 4px 0" }}>✅ 提出完了！/ Submitted!</h1>
+              <p style={{ fontSize: 13, margin: 0, opacity: 0.85 }}>先生に届いたよ！/ Your work has been sent! 🎉</p>
+            </div>
+            <div style={{ padding: "16px 12px" }}>
+              {/* 名前 */}
+              <div style={{ background: "white", borderRadius: 14, marginBottom: 12, padding: "14px 12px", boxShadow: "0 2px 6px rgba(0,0,0,0.07)" }}>
+                <p style={{ fontSize: 13, fontWeight: "bold", color: "#1a73e8", margin: "0 0 8px 0" }}>✏️ なまえ / Name</p>
+                {nameCanvasRef.current && <img src={nameCanvasRef.current.toDataURL()} style={{ width: "100%", borderRadius: 8, border: "1px solid #ddd" }} />}
+              </div>
+              {/* 算数問題 */}
+              {questions.map((q, idx) => (
+                <div key={q.id} style={{ background: "white", borderRadius: 14, marginBottom: 12, padding: "14px 12px", boxShadow: "0 2px 6px rgba(0,0,0,0.07)", border: "2px solid #dde3f0" }}>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                    <span style={{ background: "#1a73e8", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: "bold" }}>Q{idx + 1}</span>
+                    <span style={{ background: "#e8f0fe", color: "#1a73e8", borderRadius: 6, padding: "2px 8px", fontSize: 11 }}>{q.category}</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: "#444", margin: "0 0 10px 0", lineHeight: 1.6 }}>{q.jp}</p>
+                  <p style={{ fontSize: 11, color: "#888", margin: "0 0 4px 0", fontWeight: "bold" }}>📐 式 / Equation</p>
+                  {eqRefs.current[q.id]?.current && <img src={eqRefs.current[q.id].current.toDataURL()} style={{ width: "100%", borderRadius: 8, border: "1px solid #ddd", marginBottom: 8 }} />}
+                  <p style={{ fontSize: 11, color: "#888", margin: "0 0 4px 0", fontWeight: "bold" }}>✍️ 答え / Answer</p>
+                  {ansRefs.current[q.id]?.current && <img src={ansRefs.current[q.id].current.toDataURL()} style={{ width: "100%", borderRadius: 8, border: "1px solid #ddd" }} />}
+                </div>
+              ))}
+              {/* 漢字 */}
+              {kanjiQuiz.map((k) => {
+                const selected = kanjiAnswers[k.id];
+                const isCorrect = selected === k.correct;
+                return (
+                  <div key={k.id} style={{ background: "white", borderRadius: 14, marginBottom: 12, padding: "14px 12px", boxShadow: "0 2px 6px rgba(0,0,0,0.07)", border: `2px solid ${selected ? (isCorrect ? "#43a047" : "#e53935") : "#dde3f0"}` }}>
+                    <span style={{ background: "#e65100", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: "bold" }}>漢字</span>
+                    <p style={{ fontSize: 14, margin: "8px 0 4px 0" }}>{k.en} = {k.hiragana}</p>
+                    <p style={{ fontSize: 13, margin: "0 0 8px 0", color: selected ? (isCorrect ? "#43a047" : "#e53935") : "#888", fontWeight: "bold" }}>
+                      {selected ? `選んだ答え: ${selected} ${isCorrect ? "✓" : "✗"}` : "（未回答）"}
+                    </p>
+                    <p style={{ fontSize: 11, color: "#888", margin: "0 0 4px 0", fontWeight: "bold" }}>✍️ 書いてみよう</p>
+                    {kanjiRefs.current[k.id]?.current && <img src={kanjiRefs.current[k.id].current.toDataURL()} style={{ width: "100%", borderRadius: 8, border: "1px solid #ddd" }} />}
+                  </div>
+                );
+              })}
+              <button onClick={() => setSubmitted(false)}
+                style={{ width: "100%", background: "#f5f5f5", border: "2px solid #ddd", color: "#666", padding: "14px", borderRadius: 14, fontSize: 15, cursor: "pointer", fontWeight: "bold" }}>
+                ← 戻って直す / Go back
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div style={{ minHeight: "100vh", background: "#f0f4ff", paddingBottom: 100, width: "100%", overflowX: "hidden" }}>
+          {/* ヘッダー */}
+          <div style={{ background: "linear-gradient(135deg, #1a73e8, #0d47a1)", color: "white", padding: "20px 16px 14px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 10px rgba(0,0,0,0.2)", width: "100%" }}>
+            <h1 style={{ fontSize: 18, fontWeight: "bold", margin: "0 0 2px 0" }}>⚽ 算数で日本語を学ぼう！</h1>
+            <p style={{ fontSize: 12, margin: "0 0 0 0", opacity: 0.85 }}>Learn Japanese through Math ✨　2026 FIFAワールドカップ編　Week {QUIZ_META.week}</p>
+          </div>
+
+          <div style={{ padding: "14px 12px", width: "100%" }}>
+
+            {/* 名前 */}
+            <div style={{ background: "white", borderRadius: 14, marginBottom: 16, border: "2px solid #1a73e8", overflow: "hidden", boxShadow: "0 2px 6px rgba(0,0,0,0.07)" }}>
+              <div style={{ padding: "14px 12px" }}>
+                <p style={{ fontSize: 14, fontWeight: "bold", color: "#1a73e8", margin: "0 0 8px 0" }}>✏️ Your name / なまえ</p>
+                <DrawCanvas id="name" height={80} label="Write your name here! なまえをかいてね！" canvasRef={nameCanvasRef} />
+              </div>
+            </div>
+
+            {/* 算数問題 */}
+            {questions.map((q, idx) => (
+              <div key={q.id} style={{ background: "white", borderRadius: 14, marginBottom: 16, border: "2px solid #dde3f0", overflow: "hidden", boxShadow: "0 2px 6px rgba(0,0,0,0.07)", width: "100%" }}>
+                <div style={{ padding: "14px 12px 12px" }}>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                    <span style={{ background: "#1a73e8", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: "bold" }}>Q{idx + 1}</span>
+                    <span style={{ background: "#e8f0fe", color: "#1a73e8", borderRadius: 6, padding: "2px 8px", fontSize: 11 }}>{q.category}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+                    <div style={{ flexShrink: 0 }}>{illustrations[q.id]}</div>
+                    <p style={{ fontSize: 15, lineHeight: 1.8, color: "#222", margin: 0, fontWeight: "500", wordBreak: "break-word" }}>{q.jp}</p>
+                  </div>
+                  <button onClick={() => handleSpeak(q.id, q.jp, q.reading)}
+                    style={{ background: speaking[q.id] ? "#e3f2fd" : "#f5f5f5", border: `1px solid ${speaking[q.id] ? "#1a73e8" : "#ddd"}`, color: speaking[q.id] ? "#1a73e8" : "#666", padding: "5px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer", marginBottom: 14 }}>
+                    {speaking[q.id] ? "🔊 Playing..." : "🔊 Hear it!"}
+                  </button>
+
+                  {/* 式エリア */}
+                  <DrawCanvas id={`eq_${q.id}`} height={150} label="📐 式を書こう！/ Write your equation!" canvasRef={eqRefs.current[q.id]} />
+
+                  {/* 答えエリア */}
+                  <div style={{ marginTop: 12 }}>
+                    <DrawCanvas id={`ans_${q.id}`} height={120} label={`✍️ 答えを書こう！/ Write your answer!（単位: ${q.unit}）`} canvasRef={ansRefs.current[q.id]} />
+                  </div>
+
+                  {/* ことば・英語ヒント */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+                    <button onClick={() => setShowWords(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                      style={{ background: showWords[q.id] ? "#fff3e0" : "#f5f5f5", border: `1px solid ${showWords[q.id] ? "#ff9800" : "#ddd"}`, color: showWords[q.id] ? "#e65100" : "#666", padding: "6px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>
+                      📖 ことば / Words
+                    </button>
+                    <button onClick={() => setShowHint(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                      style={{ background: showHint[q.id] ? "#e8f5e9" : "#f5f5f5", border: `1px solid ${showHint[q.id] ? "#43a047" : "#ddd"}`, color: showHint[q.id] ? "#2e7d32" : "#666", padding: "6px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>
+                      🇬🇧 English hint
+                    </button>
+                  </div>
+                </div>
+                {showWords[q.id] && (
+                  <div style={{ borderTop: "1px solid #fff3e0", background: "#fffbf0", padding: "12px" }}>
+                    <p style={{ fontSize: 12, color: "#e65100", fontWeight: "bold", margin: "0 0 8px 0" }}>📖 ことばの説明 / Word Guide</p>
+                    {q.words.map((w, i) => (
+                      <div key={i} style={{ background: "white", border: "1px solid #ffe0b2", borderRadius: 10, padding: "8px 10px", marginBottom: 6 }}>
+                        <p style={{ margin: "0 0 2px 0", fontSize: 14, fontWeight: "bold", color: "#333" }}>{w.word}</p>
+                        <p style={{ margin: "0 0 2px 0", fontSize: 13, color: "#1a73e8" }}>🇬🇧 {w.meaning}</p>
+                        <p style={{ margin: 0, fontSize: 12, color: "#888" }}>例: {w.example}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {showHint[q.id] && (
+                  <div style={{ borderTop: "1px solid #e8f5e9", background: "#f1f8f1", padding: "12px" }}>
+                    <p style={{ fontSize: 12, color: "#2e7d32", fontWeight: "bold", margin: "0 0 6px 0" }}>🇬🇧 English Translation</p>
+                    <p style={{ fontSize: 14, color: "#333", margin: 0, lineHeight: 1.7, fontStyle: "italic" }}>{q.en}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* 漢字クイズ */}
+            <div style={{ background: "linear-gradient(135deg, #e65100, #bf360c)", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <h2 style={{ color: "white", fontSize: 16, fontWeight: "bold", margin: "0 0 2px 0" }}>🈳 今日の漢字 / Today's Kanji ⚽</h2>
+              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, margin: 0 }}>足・球・得点　選んで、書いてみよう！</p>
+            </div>
+
+            {kanjiQuiz.map((k) => {
+              const selected = kanjiAnswers[k.id];
+              const isCorrect = selected === k.correct;
+              return (
+                <div key={k.id} style={{ background: "white", borderRadius: 14, marginBottom: 16, border: `2px solid ${selected ? (isCorrect ? "#43a047" : "#e53935") : "#dde3f0"}`, overflow: "hidden", boxShadow: "0 2px 6px rgba(0,0,0,0.07)", width: "100%" }}>
+                  <div style={{ padding: "14px 12px" }}>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                      <span style={{ background: "#e65100", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: "bold" }}>漢字</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
+                      <div style={{ flexShrink: 0 }}>{kanjiIllustrations[k.id]}</div>
+                      <div>
+                        <p style={{ fontSize: 18, fontWeight: "bold", color: "#222", margin: "0 0 4px 0" }}>{k.en} = {k.hiragana}</p>
+                        <p style={{ fontSize: 13, color: "#888", margin: 0, fontStyle: "italic" }}>{k.hint}</p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 13, color: "#555", margin: "0 0 10px 0" }}>漢字はどれ？ / Which kanji?</p>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                      {k.choices.map((choice) => {
+                        let bg = "#f5f5f5", border = "#ddd", color = "#333";
+                        if (selected) {
+                          if (choice === k.correct) { bg = "#e8f5e9"; border = "#43a047"; color = "#2e7d32"; }
+                          else if (choice === selected && choice !== k.correct) { bg = "#ffebee"; border = "#e53935"; color = "#c62828"; }
+                        }
+                        return (
+                          <button key={choice} onClick={() => handleKanji(k.id, choice, k.correct)}
+                            style={{ background: bg, border: `2px solid ${border}`, color, padding: "12px 20px", borderRadius: 10, fontSize: 24, cursor: selected ? "default" : "pointer", fontWeight: "bold", minWidth: 70 }}>
+                            {choice}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selected && (
+                      <p style={{ fontSize: 14, fontWeight: "bold", color: isCorrect ? "#43a047" : "#e53935", marginBottom: 10 }}>
+                        {isCorrect ? "✓ 正解！Correct! 🎉" : `✗ 正解は「${k.correct}」/ The answer is「${k.correct}」`}
+                      </p>
+                    )}
+                    <DrawCanvas id={k.id} height={160} label="✍️ 書いてみよう！/ Let's write it!" canvasRef={kanjiRefs.current[k.id]} />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* エラー表示 */}
+            {submitError && (
+              <div style={{ background: "#ffebee", border: "1px solid #e53935", borderRadius: 10, padding: "10px 14px", marginBottom: 8, fontSize: 13, color: "#c62828" }}>
+                ⚠️ {submitError}　Please try again.
+              </div>
+            )}
+            {/* 提出ボタン */}
+            <button onClick={handleSubmit} disabled={submitting}
+              style={{ width: "100%", background: submitting ? "#90a4ae" : "linear-gradient(135deg, #1a73e8, #0d47a1)", color: "white", border: "none", padding: "18px", borderRadius: 16, fontSize: 17, cursor: submitting ? "default" : "pointer", fontWeight: "bold", boxShadow: submitting ? "none" : "0 4px 14px rgba(26,115,232,0.4)", marginTop: 8, transition: "all 0.2s" }}>
+              {submitting ? "⏳ Submitting..." : "📬 できた！提出する / Submit!"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
