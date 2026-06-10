@@ -149,7 +149,7 @@
         ${d.name_canvas ? `
         <div class="name-section">
           <div class="name-label">✏️ 名前 / Name</div>
-          <img src="${d.name_canvas}" class="canvas-img" style="max-height:60px; object-fit:contain;" />
+          <img src="${d.name_canvas}" style="height:70px; max-width:300px; object-fit:contain; background:#fffde7; border-radius:6px; border:1px solid #eee; display:block;" />
         </div>` : ''}
 
         ${mathQs.length > 0 ? `
@@ -184,7 +184,7 @@
                 <div style="font-size:11px;color:#888;">${k.id}</div>
                 <div style="font-size:16px;font-weight:bold;color:${k.selected===k.correct?'#2e7d32':'#c62828'};">${k.selected||'未回答'}</div>
                 <div style="font-size:10px;color:#888;">正解:${k.correct}</div>
-                ${k.canvas ? `<img src="${k.canvas}" style="width:100%;border-radius:4px;margin-top:4px;border:1px solid #eee;" />` : ''}
+                ${k.canvas ? `<img src="${k.canvas}" style="width:100%;height:80px;object-fit:contain;border-radius:4px;margin-top:4px;border:1px solid #eee;background:#fffde7;" />` : ''}
               </div>
             `).join('')}
           </div>
