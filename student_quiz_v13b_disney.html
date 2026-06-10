@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>算数×英語を学ぼう！🏰夢の国のテーマパーク編</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; overflow-x: hidden; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+    // ─── SVGイラスト ───────────────────────────────────────────
+    // SVGイラスト（テーマパーク風 + ネズキー・ネミー）
+    const illustrations = {
+      // ネズキー（男の子ネズミ・赤いズボン・丸い耳）
+      1: (<svg viewBox="0 0 80 72" width="72" height="72">
+        <ellipse cx="28" cy="22" rx="10" ry="10" fill="#f5c5a3"/>
+        <ellipse cx="52" cy="22" rx="10" ry="10" fill="#f5c5a3"/>
+        <ellipse cx="40" cy="42" rx="18" ry="20" fill="#f5c5a3"/>
+        <ellipse cx="40" cy="34" rx="14" ry="14" fill="#f5c5a3"/>
+        <circle cx="35" cy="31" r="3" fill="#1a1a1a"/>
+        <circle cx="45" cy="31" r="3" fill="#1a1a1a"/>
+        <circle cx="35.8" cy="30.2" r="1" fill="white"/>
+        <circle cx="45.8" cy="30.2" r="1" fill="white"/>
+        <ellipse cx="40" cy="37" rx="4" ry="3" fill="#e8a090"/>
+        <path d="M36 40 Q40 44 44 40" stroke="#c0706a" strokeWidth="1.5" fill="none"/>
+        <rect x="28" y="52" width="24" height="14" rx="4" fill="#e53935"/>
+        <rect x="25" y="58" width="8" height="12" rx="3" fill="#f5c5a3"/>
+        <rect x="47" y="58" width="8" height="12" rx="3" fill="#f5c5a3"/>
+        <ellipse cx="27" cy="26" rx="4" ry="3" fill="#e8a090"/>
+        <ellipse cx="53" cy="26" rx="4" ry="3" fill="#e8a090"/>
+        <text x="40" y="70" textAnchor="middle" fontSize="7" fill="#e53935" fontWeight="bold">ネズキー</text>
+      </svg>),
+      // ネミー（女の子ネズミ・ピンクのリボン・スカート）
+      2: (<svg viewBox="0 0 80 72" width="72" height="72">
+        <ellipse cx="28" cy="22" rx="10" ry="10" fill="#f5c5a3"/>
+        <ellipse cx="52" cy="22" rx="10" ry="10" fill="#f5c5a3"/>
+        <circle cx="28" cy="14" r="5" fill="#ff80ab"/>
+        <circle cx="52" cy="14" r="5" fill="#ff80ab"/>
+        <ellipse cx="40" cy="42" rx="18" ry="20" fill="#f5c5a3"/>
+        <ellipse cx="40" cy="34" rx="14" ry="14" fill="#f5c5a3"/>
+        <circle cx="35" cy="31" r="3" fill="#1a1a1a"/>
+        <circle cx="45" cy="31" r="3" fill="#1a1a1a"/>
+        <circle cx="35.8" cy="30.2" r="1" fill="white"/>
+        <circle cx="45.8" cy="30.2" r="1" fill="white"/>
+        <ellipse cx="40" cy="37" rx="4" ry="3" fill="#e8a090"/>
+        <path d="M36 40 Q40 44 44 40" stroke="#c0706a" strokeWidth="1.5" fill="none"/>
+        <ellipse cx="40" cy="56" rx="16" ry="8" fill="#ff80ab"/>
+        <rect x="28" y="48" width="24" height="10" rx="3" fill="#f06292"/>
+        <rect x="25" y="58" width="7" height="10" rx="3" fill="#f5c5a3"/>
+        <rect x="48" y="58" width="7" height="10" rx="3" fill="#f5c5a3"/>
+        <text x="40" y="71" textAnchor="middle" fontSize="7" fill="#f06292" fontWeight="bold">ネミー</text>
+      </svg>),
+      3: (<svg viewBox="0 0 80 72" width="72" height="72"><circle cx="40" cy="32" r="22" fill="none" stroke="#43a047" strokeWidth="3"/><circle cx="40" cy="10" r="6" fill="#e53935"/><circle cx="40" cy="54" r="6" fill="#e53935"/><circle cx="18" cy="32" r="6" fill="#e53935"/><circle cx="62" cy="32" r="6" fill="#e53935"/><line x1="40" y1="10" x2="40" y2="54" stroke="#43a047" strokeWidth="2"/><line x1="18" y1="32" x2="62" y2="32" stroke="#43a047" strokeWidth="2"/><text x="40" y="68" textAnchor="middle" fontSize="7" fill="#43a047" fontWeight="bold">🎡 Ferris Wheel</text></svg>),
+      4: (<svg viewBox="0 0 80 72" width="72" height="72"><path d="M10,50 Q20,20 35,25 Q50,30 55,15 Q65,5 70,20 L70,50 Z" fill="#e53935"/><rect x="8" y="50" width="64" height="8" fill="#1565c0"/><text x="40" y="66" textAnchor="middle" fontSize="7" fill="#e53935" fontWeight="bold">🎢 Roller Coaster</text></svg>),
+      // ネズキー＆ネミー並んでる
+      5: (<svg viewBox="0 0 80 72" width="72" height="72">
+        {/* ネズキー小さめ・左 */}
+        <ellipse cx="20" cy="18" rx="7" ry="7" fill="#f5c5a3"/>
+        <ellipse cx="34" cy="18" rx="7" ry="7" fill="#f5c5a3"/>
+        <ellipse cx="27" cy="34" rx="12" ry="13" fill="#f5c5a3"/>
+        <ellipse cx="27" cy="27" rx="9" ry="9" fill="#f5c5a3"/>
+        <circle cx="24" cy="25" r="2" fill="#1a1a1a"/>
+        <circle cx="30" cy="25" r="2" fill="#1a1a1a"/>
+        <rect x="20" y="42" width="14" height="10" rx="3" fill="#e53935"/>
+        {/* ネミー小さめ・右 */}
+        <ellipse cx="46" cy="18" rx="7" ry="7" fill="#f5c5a3"/>
+        <ellipse cx="60" cy="18" rx="7" ry="7" fill="#f5c5a3"/>
+        <circle cx="46" cy="11" r="4" fill="#ff80ab"/>
+        <circle cx="60" cy="11" r="4" fill="#ff80ab"/>
+        <ellipse cx="53" cy="34" rx="12" ry="13" fill="#f5c5a3"/>
+        <ellipse cx="53" cy="27" rx="9" ry="9" fill="#f5c5a3"/>
+        <circle cx="50" cy="25" r="2" fill="#1a1a1a"/>
+        <circle cx="56" cy="25" r="2" fill="#1a1a1a"/>
+        <ellipse cx="53" cy="42" rx="11" ry="6" fill="#ff80ab"/>
+        <rect x="46" y="36" width="14" height="8" rx="3" fill="#f06292"/>
+        <text x="40" y="62" textAnchor="middle" fontSize="7" fill="#e53935" fontWeight="bold">ネズキー&ネミー</text>
+        <text x="40" y="70" textAnchor="middle" fontSize="6" fill="#f06292">グッズショップ🛍️</text>
+      </svg>),
+      6: (<svg viewBox="0 0 80 72" width="72" height="72"><rect x="5" y="10" width="70" height="52" rx="3" fill="#e8f5e9" stroke="#43a047" strokeWidth="2"/><rect x="5" y="10" width="70" height="10" fill="#43a047"/><text x="40" y="19" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">PARK MAP</text><rect x="10" y="25" width="20" height="14" rx="2" fill="#42a5f5" opacity="0.7"/><rect x="35" y="25" width="35" height="14" rx="2" fill="#ffd600" opacity="0.7"/><rect x="10" y="43" width="55" height="12" rx="2" fill="#e53935" opacity="0.5"/><text x="40" y="68" textAnchor="middle" fontSize="7" fill="#43a047" fontWeight="bold">🏰 Area Map</text></svg>),
+      7: (<svg viewBox="0 0 80 72" width="72" height="72"><rect x="5" y="28" width="70" height="10" fill="#ffd600"/><rect x="5" y="52" width="70" height="8" fill="#1a1a1a"/><text x="40" y="68" textAnchor="middle" fontSize="7" fill="#e53935" fontWeight="bold">🎪 Parade</text></svg>),
+      8: (<svg viewBox="0 0 80 72" width="72" height="72"><rect x="5" y="38" width="70" height="8" rx="2" fill="#795548"/><rect x="12" y="23" width="30" height="18" rx="3" fill="#e53935"/><rect x="15" y="26" width="10" height="10" rx="1" fill="#90caf9"/><rect x="28" y="26" width="10" height="10" rx="1" fill="#90caf9"/><circle cx="18" cy="40" r="5" fill="#1a1a1a"/><circle cx="36" cy="40" r="5" fill="#1a1a1a"/><text x="40" y="58" textAnchor="middle" fontSize="7" fill="#795548" fontWeight="bold">🚂 Mini Train</text></svg>),
+      // ネミーのアイスクリーム屋さん
+      9: (<svg viewBox="0 0 80 72" width="72" height="72">
+        <ellipse cx="55" cy="16" rx="7" ry="7" fill="#f5c5a3"/>
+        <ellipse cx="67" cy="16" rx="7" ry="7" fill="#f5c5a3"/>
+        <circle cx="55" cy="9" r="4" fill="#ff80ab"/>
+        <circle cx="67" cy="9" r="4" fill="#ff80ab"/>
+        <ellipse cx="61" cy="30" rx="10" ry="11" fill="#f5c5a3"/>
+        <ellipse cx="61" cy="24" rx="8" ry="8" fill="#f5c5a3"/>
+        <circle cx="58" cy="22" r="2" fill="#1a1a1a"/>
+        <circle cx="64" cy="22" r="2" fill="#1a1a1a"/>
+        <ellipse cx="61" cy="38" rx="9" ry="6" fill="#ff80ab"/>
+        <rect x="5" y="25" width="35" height="30" rx="3" fill="#42a5f5"/>
+        <rect x="8" y="28" width="12" height="10" rx="2" fill="#e3f2fd"/>
+        <rect x="23" y="28" width="12" height="10" rx="2" fill="#e3f2fd"/>
+        <text x="22" y="48" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">🍦Shop</text>
+        <text x="40" y="68" textAnchor="middle" fontSize="7" fill="#f06292" fontWeight="bold">ネミーのアイス屋🍦</text>
+      </svg>),
+      10: (<svg viewBox="0 0 80 72" width="72" height="72"><circle cx="40" cy="32" r="8" fill="#ffd600"/>{[0,1,2,3,4,5,6,7].map(i=>{const a=i*45*Math.PI/180;return <circle key={i} cx={40+26*Math.cos(a)} cy={32+26*Math.sin(a)} r="4" fill={['#e53935','#1565c0','#43a047','#ffd600','#e53935','#1565c0','#43a047','#ffd600'][i]}/>})}<text x="40" y="68" textAnchor="middle" fontSize="7" fill="#e53935" fontWeight="bold">🎆 Fireworks</text></svg>),
+    };
+
+    // ─── 問題データ ────────────────────────────────────────────
+    const QUIZ_META = { week: 1, grade: 6, jp_level: "native", math_theme: "割合・比・速さ", english_theme: "比較級（bigger / more / than）" };
+
+    const questions = [
+      { id:1, math_tag:"割合・百分率", category:"🐭ネズキー", jp:"ネズキーのテーマパークの入場者数は去年より20%増えて、今年は360万人でした。去年の入場者数は何万人ですか？", answer_key:300, unit:"万人",
+        english_structure:"___ times more than ___", english_answer:"This year is ___ times more than last year.", english_same_as:null,
+        example_jp:"今年は去年より20%多い", example_en:"This year is 20% more than last year.",
+        vocab:{ word:"percent", reading:"パーセント", meaning:"パーセント・割合" }},
+      { id:2, math_tag:"割合・比", category:"🐭ネミー", jp:"ネミーのパーク内のアトラクションは全部で80個あります。そのうち35%が子ども向けです。子ども向けのアトラクションは何個ですか？", answer_key:28, unit:"個",
+        english_structure:"___ percent of ___", english_answer:"___ percent of 80 is ___.", english_same_as:1,
+        example_jp:"80個の35%は何個？", example_en:"35 percent of 80 attractions is 28.",
+        vocab:{ word:"attraction", reading:"アトラクション", meaning:"乗り物・アトラクション" }},
+      { id:3, math_tag:"比・人数", category:"🎡", jp:"観覧車に乗った人と乗らなかった人の比は3:7でした。パーク全体の来場者が5000人のとき、観覧車に乗った人は何人ですか？", answer_key:1500, unit:"人",
+        english_structure:"The ratio of A to B is ___", english_answer:"The ratio of riders to non-riders is 3 to 7.", english_same_as:null,
+        example_jp:"3:7の比で分けると？", example_en:"The ratio of A to B is 3 to 7.",
+        vocab:{ word:"ratio", reading:"レイシオ", meaning:"比・割合" }},
+      { id:4, math_tag:"速さ・距離", category:"🎢", jp:"ジェットコースターの速さは時速72kmです。コースの長さは1.2kmです。最初から最後まで何秒かかりますか？", answer_key:60, unit:"秒",
+        english_structure:"How fast is ___ compared to ___?", english_answer:"It is faster than a car in a city.", english_same_as:null,
+        example_jp:"時速72kmは何m/秒？", example_en:"72 km/h is faster than 60 km/h.",
+        vocab:{ word:"faster", reading:"ファスター", meaning:"より速い" }},
+      { id:5, math_tag:"お金・割引", category:"🐭ネズキー&ネミー", jp:"ネズキーとネミーのグッズセットの定価は9800円です。会員は定価の15%引きで買えます。会員価格は何円ですか？", answer_key:8330, unit:"円",
+        english_structure:"___ is ___ percent cheaper than ___", english_answer:"The member price is 15% cheaper than the regular price.", english_same_as:null,
+        example_jp:"15%引きはいくら安い？", example_en:"15% off means 15 percent cheaper.",
+        vocab:{ word:"discount", reading:"ディスカウント", meaning:"割引" }},
+      { id:6, math_tag:"面積・比", category:"🏰", jp:"パーク全体の面積は51ヘクタールです。そのうちショップエリアは全体の12%を占めています。ショップエリアの面積は何ヘクタールですか？", answer_key:6.12, unit:"ha",
+        english_structure:"___ is ___ percent of ___", english_answer:"The shop area is 12 percent of the total area.", english_same_as:1,
+        example_jp:"全体の12%は何ha？", example_en:"12 percent of 51 hectares is 6.12 hectares.",
+        vocab:{ word:"area", reading:"エリア", meaning:"面積・エリア" }},
+      { id:7, math_tag:"比例・人数", category:"🎪", jp:"パレードを見る人の列は1mに4人並びます。列の長さが250mのとき、何人が並んでいますか？", answer_key:1000, unit:"人",
+        english_structure:"There are ___ times more people than ___", english_answer:"There are 1,000 people, which is more than last year.", english_same_as:3,
+        example_jp:"1mに4人×250m＝何人？", example_en:"There are 4 people per meter.",
+        vocab:{ word:"per", reading:"パー", meaning:"〜あたり・〜ごとに" }},
+      { id:8, math_tag:"速さ・時間", category:"🚂", jp:"パーク内のミニ列車は時速18kmで走ります。駅から駅まで2.4kmあります。何分かかりますか？", answer_key:8, unit:"分",
+        english_structure:"It takes ___ minutes, which is ___ than ___", english_answer:"It takes 8 minutes, which is shorter than walking.", english_same_as:4,
+        example_jp:"18kmで2.4kmは何分？", example_en:"It takes 8 minutes.",
+        vocab:{ word:"shorter", reading:"ショーター", meaning:"より短い" }},
+      { id:9, math_tag:"割合・売上", category:"🐭ネミー", jp:"ネミーのアイスクリームショップの今月の売上は126万円でした。先月より5%増えたとすると、先月の売上は何万円ですか？（小数第1位を四捨五入）", answer_key:120, unit:"万円",
+        english_structure:"___ is ___ percent more than ___", english_answer:"This month is 5 percent more than last month.", english_same_as:1,
+        example_jp:"5%増えた→もとは？", example_en:"Sales are 5 percent higher than last month.",
+        vocab:{ word:"higher", reading:"ハイアー", meaning:"より高い・より多い" }},
+      { id:10, math_tag:"比・混合比", category:"🎆", jp:"花火大会の観客のうち、大人と子どもの比は5:3でした。子どもが600人のとき、大人は何人ですか？", answer_key:1000, unit:"人",
+        english_structure:"There are ___ more adults than children", english_answer:"There are more adults than children.", english_same_as:3,
+        example_jp:"5:3で子が600人→大人は？", example_en:"There are more adults than children.",
+        vocab:{ word:"more", reading:"モア", meaning:"より多い・もっと" }},
+    ];
+
+    // ─── テストコーナーデータ ──────────────────────────────────
+    const grammarQuiz = [
+      { id:"g1", q:"This park is ___ than that one.", jp:"このパークはあのパークより大きい。", choices:["bigger","big","most big"], correct:"bigger" },
+      { id:"g2", q:"The roller coaster is ___ exciting than the carousel.", jp:"ジェットコースターは観覧車より刺激的だ。", choices:["more","much","very"], correct:"more" },
+      { id:"g3", q:"Today's sales are 20% higher ___ last year.", jp:"今日の売上は去年より20%高い。", choices:["than","then","that"], correct:"than" },
+    ];
+
+    // ヒアリング問題
+    const listeningQuiz = [
+      { id:"l1", audio:"This year is 20% more than last year.", jp:"（今年と去年の比較）",
+        choices:["This year is 20% more than last year.","This year is 20% less than last year.","This year is 20% more than next year."], correct:"This year is 20% more than last year." },
+      { id:"l2", audio:"The member price is cheaper than the regular price.", jp:"（会員価格についての説明）",
+        choices:["The member price is cheaper than the regular price.","The member price is more expensive than the regular price.","The member price is the same as the regular price."], correct:"The member price is cheaper than the regular price." },
+      { id:"l3", audio:"There are more adults than children.", jp:"（大人と子どもの比較）",
+        choices:["There are more children than adults.","There are more adults than children.","There are as many adults as children."], correct:"There are more adults than children." },
+    ];
+
+    // 単語マッチング（5問）
+    const vocabPool = [
+      { id:"v1", en:"percent", jp:"パーセント" },
+      { id:"v2", en:"discount", jp:"割引" },
+      { id:"v3", en:"ratio", jp:"比・割合" },
+      { id:"v4", en:"faster", jp:"より速い" },
+      { id:"v5", en:"area", jp:"面積・エリア" },
+    ];
+
+    // ─── DrawCanvas ───────────────────────────────────────────
+    function DrawCanvas({ id, height=120, label="✏️ ここに書こう", canvasRef: externalRef }) {
+      const internalRef = React.useRef(null);
+      const canvasRef = externalRef || internalRef;
+      const isDrawing = React.useRef(false);
+      const lastPos = React.useRef(null);
+
+      const getPos = (e, canvas) => {
+        const rect = canvas.getBoundingClientRect();
+        const sx = canvas.width/rect.width, sy = canvas.height/rect.height;
+        if(e.touches) return {x:(e.touches[0].clientX-rect.left)*sx, y:(e.touches[0].clientY-rect.top)*sy};
+        return {x:(e.clientX-rect.left)*sx, y:(e.clientY-rect.top)*sy};
+      };
+
+      React.useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle="#fffde7"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle="#1a237e"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.lineJoin="round";
+        const onTS=(e)=>{e.preventDefault();isDrawing.current=true;lastPos.current=getPos(e,canvas);};
+        const onTM=(e)=>{e.preventDefault();if(!isDrawing.current)return;const pos=getPos(e,canvas);const c2=canvas.getContext("2d");c2.beginPath();c2.moveTo(lastPos.current.x,lastPos.current.y);c2.lineTo(pos.x,pos.y);c2.stroke();lastPos.current=pos;};
+        const onTE=(e)=>{e.preventDefault();isDrawing.current=false;};
+        canvas.addEventListener("touchstart",onTS,{passive:false});
+        canvas.addEventListener("touchmove",onTM,{passive:false});
+        canvas.addEventListener("touchend",onTE,{passive:false});
+        return()=>{canvas.removeEventListener("touchstart",onTS);canvas.removeEventListener("touchmove",onTM);canvas.removeEventListener("touchend",onTE);};
+      },[]);
+
+      const sd=(e)=>{isDrawing.current=true;lastPos.current=getPos(e,canvasRef.current);};
+      const dr=(e)=>{if(!isDrawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const pos=getPos(e,c);ctx.beginPath();ctx.moveTo(lastPos.current.x,lastPos.current.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastPos.current=pos;};
+      const sp=()=>{isDrawing.current=false;};
+      const clear=()=>{const c=canvasRef.current;const ctx=c.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,c.width,c.height);ctx.strokeStyle="#1a237e";ctx.lineWidth=3;ctx.lineCap="round";ctx.lineJoin="round";};
+
+      return (
+        <div style={{marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <span style={{fontSize:12,color:"#666",fontWeight:"bold"}}>{label}</span>
+            <button onClick={clear} style={{fontSize:11,color:"#999",background:"none",border:"1px solid #ddd",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>消す</button>
+          </div>
+          <canvas ref={canvasRef} width={600} height={height}
+            style={{width:"100%",height:height,borderRadius:10,border:"2px solid #c5cae9",display:"block",touchAction:"none",cursor:"crosshair"}}
+            onMouseDown={sd} onMouseMove={dr} onMouseUp={sp} onMouseLeave={sp}/>
+        </div>
+      );
+    }
+
+    // ─── 並び替えコンポーネント ───────────────────────────────
+    function SortTest({ sentence, onDone }) {
+      const words = React.useMemo(() => sentence.split(" ").sort(()=>Math.random()-0.5), [sentence]);
+      const [selected, setSelected] = React.useState([]);
+      const [remaining, setRemaining] = React.useState(words);
+      const [result, setResult] = React.useState(null);
+
+      const addWord = (w, idx) => {
+        if(result) return;
+        setSelected(s=>[...s,w]);
+        setRemaining(r=>r.filter((_,i)=>i!==idx));
+      };
+      const removeWord = (w, idx) => {
+        if(result) return;
+        setRemaining(r=>[...r,w]);
+        setSelected(s=>s.filter((_,i)=>i!==idx));
+      };
+      const check = () => {
+        const ans = selected.join(" ");
+        const correct = ans === sentence;
+        setResult(correct);
+        if(correct && onDone) onDone();
+      };
+      const reset = () => { setSelected([]); setRemaining(words); setResult(null); };
+
+      return (
+        <div>
+          {/* 並べる場所 */}
+          <div style={{minHeight:48,background:"#f9fbe7",border:"2px dashed #aed581",borderRadius:10,padding:"8px",marginBottom:8,display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
+            {selected.length===0 && <span style={{color:"#aaa",fontSize:13}}>ここに並べよう</span>}
+            {selected.map((w,i)=>(
+              <button key={i} onClick={()=>removeWord(w,i)}
+                style={{background:"#c8e6c9",border:"2px solid #66bb6a",borderRadius:8,padding:"6px 12px",fontSize:14,fontWeight:"bold",cursor:"pointer",color:"#1b5e20"}}>
+                {w}
+              </button>
+            ))}
+          </div>
+          {/* 単語パレット */}
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+            {remaining.map((w,i)=>(
+              <button key={i} onClick={()=>addWord(w,i)}
+                style={{background:"white",border:"2px solid #1a73e8",borderRadius:8,padding:"6px 12px",fontSize:14,fontWeight:"bold",cursor:"pointer",color:"#1a73e8"}}>
+                {w}
+              </button>
+            ))}
+          </div>
+          {/* 判定・リセット */}
+          <div style={{display:"flex",gap:8}}>
+            {result===null && selected.length>0 &&
+              <button onClick={check} style={{background:"#1a73e8",color:"white",border:"none",padding:"8px 20px",borderRadius:10,fontSize:14,fontWeight:"bold",cursor:"pointer"}}>確認する</button>}
+            {result!==null &&
+              <p style={{fontSize:14,fontWeight:"bold",color:result?"#43a047":"#e53935",padding:"8px 0"}}>
+                {result ? "✓ 正解！ 🎉" : `✗ もう一度！　正解：${sentence}`}
+              </p>}
+            {result===false && <button onClick={reset} style={{background:"#ff7043",color:"white",border:"none",padding:"8px 16px",borderRadius:10,fontSize:13,fontWeight:"bold",cursor:"pointer"}}>リセット</button>}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── メインApp ────────────────────────────────────────────
+    function App() {
+      const [englishOpen, setEnglishOpen] = React.useState({});
+      const [sortTestOpen, setSortTestOpen] = React.useState({});
+      const [sortDone, setSortDone] = React.useState({});
+      const [grammarAnswers, setGrammarAnswers] = React.useState({});
+      const [listeningAnswers, setListeningAnswers] = React.useState({});
+      const [vocabSelected, setVocabSelected] = React.useState({left:null,right:null});
+      const [vocabMatched, setVocabMatched] = React.useState({});
+      const [submitted, setSubmitted] = React.useState(false);
+      const [speaking, setSpeaking] = React.useState(null);
+
+      const nameCanvasRef = React.useRef(null);
+      const eqRefs = React.useRef({});
+      const ansRefs = React.useRef({});
+      questions.forEach(q=>{
+        if(!eqRefs.current[q.id]) eqRefs.current[q.id]=React.createRef();
+        if(!ansRefs.current[q.id]) ansRefs.current[q.id]=React.createRef();
+      });
+
+      const shuffledVocabJp = React.useMemo(()=>[...vocabPool].sort(()=>Math.random()-0.5),[]);
+
+      // 音声
+      const handleSpeak = (text, id) => {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang="en-US"; u.rate=0.85;
+        setSpeaking(id);
+        u.onend=()=>setSpeaking(null);
+        window.speechSynthesis.speak(u);
+      };
+
+      // ＋English開閉
+      const toggleEnglish = (id) => setEnglishOpen(p=>({...p,[id]:!p[id]}));
+
+      // 並び替えテスト
+      const toggleSort = (id) => setSortTestOpen(p=>({...p,[id]:!p[id]}));
+
+      // 文法
+      const handleGrammar = (id, choice) => { if(!grammarAnswers[id]) setGrammarAnswers(p=>({...p,[id]:choice})); };
+
+      // ヒアリング
+      const handleListening = (id, choice) => { if(!listeningAnswers[id]) setListeningAnswers(p=>({...p,[id]:choice})); };
+
+      // 単語マッチング
+      const handleVocabLeft = (id) => {
+        if(vocabMatched[id]) return;
+        setVocabSelected(prev=>{
+          const newLeft = prev.left===id ? null : id;
+          if(newLeft && prev.right){
+            const correctJp = vocabPool.find(v=>v.id===newLeft)?.jp;
+            const selectedJp = shuffledVocabJp.find(v=>v.id===prev.right)?.jp;
+            if(correctJp===selectedJp){
+              setVocabMatched(m=>({...m,[newLeft]:true,[`jp_${prev.right}`]:true}));
+              return {left:null,right:null};
+            }
+            return {left:newLeft,right:prev.right};
+          }
+          return {...prev,left:newLeft};
+        });
+      };
+      const handleVocabRight = (id) => {
+        if(vocabMatched[`jp_${id}`]) return;
+        setVocabSelected(prev=>{
+          const newRight = prev.right===id ? null : id;
+          if(prev.left && newRight){
+            const correctJp = vocabPool.find(v=>v.id===prev.left)?.jp;
+            const selectedJp = shuffledVocabJp.find(v=>v.id===newRight)?.jp;
+            if(correctJp===selectedJp){
+              setVocabMatched(m=>({...m,[prev.left]:true,[`jp_${newRight}`]:true}));
+              return {left:null,right:null};
+            }
+            return {left:prev.left,right:newRight};
+          }
+          return {...prev,right:newRight};
+        });
+      };
+      const vocabScore = Object.keys(vocabMatched).filter(k=>!k.startsWith("jp_")).length;
+
+      // Supabase設定
+      const SUPABASE_URL = "https://upmflhdbhbyzoeldrvvw.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+
+      // 提出
+      const [submitting, setSubmitting] = React.useState(false);
+      const [submitError, setSubmitError] = React.useState(null);
+
+      const handleSubmit = async () => {
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+          const gScore = Object.entries(grammarAnswers).filter(([id,a])=>grammarQuiz.find(g=>g.id===id)?.correct===a).length;
+          const lScore = Object.entries(listeningAnswers).filter(([id,a])=>listeningQuiz.find(l=>l.id===id)?.correct===a).length;
+
+          // Canvas画像を取得
+          const nameCanvas = nameCanvasRef.current?.toDataURL("image/png") || null;
+          const questionData = questions.map(q => ({
+            id: q.id,
+            math_tag: q.math_tag,
+            equation_canvas: eqRefs.current[q.id]?.current?.toDataURL("image/png") || null,
+            answer_canvas: ansRefs.current[q.id]?.current?.toDataURL("image/png") || null,
+            english_opened: !!englishOpen[q.id],
+          }));
+
+          const payload = {
+            student_name: "（手書き）",
+            week: QUIZ_META.week,
+            grade: QUIZ_META.grade,
+            name_canvas: nameCanvas,
+            questions: questionData,
+            grammar_score: gScore,
+            listening_score: lScore,
+            vocab_score: vocabScore,
+            english_opened_count: Object.values(englishOpen).filter(Boolean).length,
+            submitted_at: new Date().toISOString(),
+          };
+
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Prefer": "return=minimal",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if(!res.ok) throw new Error(`送信エラー: ${res.status}`);
+          setSubmitted(true);
+          window.scrollTo({top:0,behavior:"smooth"});
+        } catch(e) {
+          setSubmitError(e.message);
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      // ─── 提出済み画面 ─────────────────────────────────────
+      if(submitted){
+        const gScore = Object.entries(grammarAnswers).filter(([id,a])=>grammarQuiz.find(g=>g.id===id)?.correct===a).length;
+        const lScore = Object.entries(listeningAnswers).filter(([id,a])=>listeningQuiz.find(l=>l.id===id)?.correct===a).length;
+        return (
+          <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:60}}>
+            <div style={{background:"linear-gradient(135deg,#1a73e8,#0d47a1)",color:"white",padding:"20px 16px 16px"}}>
+              <h1 style={{fontSize:18,fontWeight:"bold",margin:"0 0 4px 0"}}>✅ 提出完了！</h1>
+              <p style={{fontSize:12,margin:0,opacity:0.85}}>先生に届いたよ！お疲れさま 🎉</p>
+            </div>
+            <div style={{padding:"14px 12px"}}>
+              <div style={{background:"white",borderRadius:14,marginBottom:12,padding:"14px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+                <p style={{fontSize:14,fontWeight:"bold",color:"#1a73e8",marginBottom:8}}>📊 英語の結果</p>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <span style={{background:"#e8f5e9",color:"#2e7d32",padding:"4px 12px",borderRadius:20,fontSize:13,fontWeight:"bold"}}>文法 {gScore}/3</span>
+                  <span style={{background:"#e3f2fd",color:"#1565c0",padding:"4px 12px",borderRadius:20,fontSize:13,fontWeight:"bold"}}>ヒアリング {lScore}/3</span>
+                  <span style={{background:"#fff3e0",color:"#e65100",padding:"4px 12px",borderRadius:20,fontSize:13,fontWeight:"bold"}}>単語 {vocabScore}/5</span>
+                  <span style={{background:"#f3e5f5",color:"#7b1fa2",padding:"4px 12px",borderRadius:20,fontSize:13,fontWeight:"bold"}}>＋English {Object.values(englishOpen).filter(Boolean).length}/10</span>
+                </div>
+              </div>
+              <div style={{background:"white",borderRadius:14,marginBottom:12,padding:"12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+                <p style={{fontSize:13,fontWeight:"bold",color:"#1a73e8",marginBottom:8}}>なまえ</p>
+                {nameCanvasRef.current && <img src={nameCanvasRef.current.toDataURL()} style={{width:"100%",borderRadius:8,border:"1px solid #ddd"}}/>}
+              </div>
+              {questions.map((q,idx)=>(
+                <div key={q.id} style={{background:"white",borderRadius:14,marginBottom:10,padding:"12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #dde3f0"}}>
+                  <div style={{display:"flex",gap:6,marginBottom:6,flexWrap:"wrap"}}>
+                    <span style={{background:"#1a73e8",color:"white",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                    <span style={{background:"#fce4ec",color:"#c62828",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{q.math_tag}</span>
+                    {englishOpen[q.id] && <span style={{background:"#e8f5e9",color:"#2e7d32",borderRadius:6,padding:"2px 8px",fontSize:11}}>＋English ✓</span>}
+                    {sortDone[q.id] && <span style={{background:"#fff9c4",color:"#f57f17",borderRadius:6,padding:"2px 8px",fontSize:11}}>並び替え ✓</span>}
+                  </div>
+                  <p style={{fontSize:13,color:"#444",margin:"0 0 8px 0"}}>{q.jp}</p>
+                  <p style={{fontSize:11,color:"#888",margin:"0 0 3px 0",fontWeight:"bold"}}>📐 式</p>
+                  {eqRefs.current[q.id]?.current && <img src={eqRefs.current[q.id].current.toDataURL()} style={{width:"100%",borderRadius:8,border:"1px solid #ddd",marginBottom:6}}/>}
+                  <p style={{fontSize:11,color:"#888",margin:"0 0 3px 0",fontWeight:"bold"}}>✍️ 答え（{q.unit}）</p>
+                  {ansRefs.current[q.id]?.current && <img src={ansRefs.current[q.id].current.toDataURL()} style={{width:"100%",borderRadius:8,border:"1px solid #ddd"}}/>}
+                </div>
+              ))}
+              <button onClick={()=>setSubmitted(false)} style={{width:"100%",background:"#f5f5f5",border:"2px solid #ddd",color:"#666",padding:"14px",borderRadius:14,fontSize:15,cursor:"pointer",fontWeight:"bold"}}>← 戻って直す</button>
+            </div>
+          </div>
+        );
+      }
+
+      // ─── メイン画面 ──────────────────────────────────────
+      return (
+        <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:100,overflowX:"hidden"}}>
+          <div style={{background:"linear-gradient(135deg,#1a73e8,#0d47a1)",color:"white",padding:"16px 16px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 10px rgba(0,0,0,0.2)"}}>
+            <h1 style={{fontSize:17,fontWeight:"bold",margin:"0 0 4px 0"}}>🏰 算数×英語を学ぼう！</h1>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>🔢 算数：{QUIZ_META.math_theme}</span>
+              <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>🌍 英語：{QUIZ_META.english_theme}</span>
+              <span style={{background:"rgba(255,255,255,0.15)",borderRadius:6,padding:"2px 8px",fontSize:11}}>Week {QUIZ_META.week}</span>
+            </div>
+          </div>
+
+          <div style={{padding:"12px 12px"}}>
+
+            {/* 名前 */}
+            <div style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #1a73e8",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+              <div style={{padding:"12px"}}>
+                <p style={{fontSize:14,fontWeight:"bold",color:"#1a73e8",marginBottom:8}}>✏️ 名前</p>
+                <DrawCanvas id="name" height={70} label="名前を書いてね（漢字で）" canvasRef={nameCanvasRef}/>
+              </div>
+            </div>
+
+            {/* ─── 問題ループ ─── */}
+            {questions.map((q,idx)=>{
+              const isOpen = englishOpen[q.id];
+              const showStructure = !q.english_same_as;
+              const isSortOpen = sortTestOpen[q.id];
+              return (
+                <div key={q.id} style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #dde3f0",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+                  <div style={{padding:"12px"}}>
+                    {/* ヘッダー */}
+                    <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
+                      <span style={{background:"#1a73e8",color:"white",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                      <span style={{background:"#e8f0fe",color:"#1a73e8",borderRadius:6,padding:"2px 8px",fontSize:11}}>{q.category}</span>
+                      <span style={{background:"#fce4ec",color:"#c62828",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{q.math_tag}</span>
+                    </div>
+                    {/* 問題文 */}
+                    <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                      <div style={{flexShrink:0}}>{illustrations[q.id]}</div>
+                      <p style={{fontSize:16,lineHeight:1.8,color:"#222",margin:0,fontWeight:"500",wordBreak:"break-word"}}>{q.jp}</p>
+                    </div>
+                    {/* 手書き */}
+                    <DrawCanvas id={`eq_${q.id}`} height={150} label="📐 式" canvasRef={eqRefs.current[q.id]}/>
+                    <DrawCanvas id={`ans_${q.id}`} height={120} label={`✍️ 答え（${q.unit}）`} canvasRef={ansRefs.current[q.id]}/>
+                    {/* ＋Englishボタン */}
+                    <button onClick={()=>toggleEnglish(q.id)}
+                      style={{width:"100%",marginTop:10,padding:"13px 0",borderRadius:12,border:"none",cursor:"pointer",fontWeight:"bold",fontSize:15,
+                        background:isOpen?"linear-gradient(135deg,#2e7d32,#1b5e20)":"linear-gradient(135deg,#43a047,#2e7d32)",
+                        color:"white",boxShadow:isOpen?"none":"0 3px 10px rgba(67,160,71,0.5)",transition:"all 0.2s"}}>
+                      {isOpen ? "▲ ＋English を閉じる" : "🌍 ＋English　英語もやってみよう！"}
+                    </button>
+                  </div>
+
+                  {/* ＋Englishパネル */}
+                  {isOpen && (
+                    <div style={{borderTop:"3px solid #43a047",background:"#f1f8e9",padding:"14px 12px"}}>
+
+                      {/* 文法 */}
+                      {showStructure ? (
+                        <div style={{background:"white",borderRadius:10,padding:"12px",marginBottom:12,border:"1px solid #c5e1a5"}}>
+                          <p style={{fontSize:12,color:"#2e7d32",fontWeight:"bold",margin:"0 0 6px 0"}}>📐 文法</p>
+                          <p style={{fontSize:18,color:"#1b5e20",fontWeight:"bold",margin:"0 0 4px 0",fontFamily:"monospace"}}>{q.english_structure}</p>
+                          <p style={{fontSize:14,color:"#558b2f",margin:0}}>→ {q.english_answer}</p>
+                        </div>
+                      ) : (
+                        <div style={{background:"#e8f5e9",borderRadius:10,padding:"8px 12px",marginBottom:12,border:"1px dashed #a5d6a7"}}>
+                          <p style={{fontSize:12,color:"#558b2f",margin:0}}>💡 文法は同じ：<strong>{q.english_structure}</strong></p>
+                        </div>
+                      )}
+
+                      {/* 例文 + テストボタン */}
+                      <div style={{background:"white",borderRadius:10,padding:"12px",marginBottom:12,border:"1px solid #c5e1a5"}}>
+                        <p style={{fontSize:12,color:"#2e7d32",fontWeight:"bold",margin:"0 0 8px 0"}}>💬 この問題を英語で言うと</p>
+                        <p style={{fontSize:14,color:"#555",margin:"0 0 8px 0"}}>🇯🇵 {q.example_jp}</p>
+
+                        {!isSortOpen ? (
+                          <div>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                              <p style={{fontSize:15,color:"#1b5e20",fontWeight:"bold",margin:0,fontStyle:"italic",flex:1}}>🇬🇧 {q.example_en}</p>
+                              <button onClick={()=>handleSpeak(q.example_en,`ex_${q.id}`)}
+                                style={{flexShrink:0,background:speaking===`ex_${q.id}`?"#c8e6c9":"#e8f5e9",border:"1px solid #81c784",borderRadius:8,padding:"5px 10px",fontSize:12,cursor:"pointer",color:"#2e7d32",fontWeight:"bold"}}>
+                                {speaking===`ex_${q.id}`?"🔊...":"🔊 聞く"}
+                              </button>
+                            </div>
+                            <button onClick={()=>toggleSort(q.id)}
+                              style={{width:"100%",background:"linear-gradient(135deg,#f57f17,#e65100)",color:"white",border:"none",padding:"10px",borderRadius:10,fontSize:14,fontWeight:"bold",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,127,23,0.4)"}}>
+                              🧩 並び替えテストに挑戦！
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{background:"#fff9c4",borderRadius:8,padding:"8px 10px",marginBottom:10,fontSize:12,color:"#f57f17",fontWeight:"bold"}}>
+                              🧩 英文を正しい順番に並べよう！
+                            </div>
+                            <SortTest sentence={q.example_en} onDone={()=>setSortDone(p=>({...p,[q.id]:true}))}/>
+                            <button onClick={()=>toggleSort(q.id)} style={{marginTop:8,fontSize:12,color:"#888",background:"none",border:"1px solid #ddd",borderRadius:6,padding:"4px 10px",cursor:"pointer"}}>← 例文に戻る</button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 単語 */}
+                      <div style={{background:"white",borderRadius:10,padding:"12px",border:"1px solid #c5e1a5"}}>
+                        <p style={{fontSize:12,color:"#2e7d32",fontWeight:"bold",margin:"0 0 8px 0"}}>📝 今日の単語</p>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{flex:1}}>
+                            <p style={{fontSize:18,color:"#1b5e20",fontWeight:"bold",margin:"0 0 2px 0"}}>{q.vocab.word}</p>
+                            <p style={{fontSize:12,color:"#888",margin:"0 0 2px 0"}}>読み：{q.vocab.reading}</p>
+                            <p style={{fontSize:13,color:"#555",margin:0}}>意味：{q.vocab.meaning}</p>
+                          </div>
+                          <button onClick={()=>handleSpeak(q.vocab.word,`vocab_${q.id}`)}
+                            style={{background:speaking===`vocab_${q.id}`?"#c8e6c9":"#e8f5e9",border:"1px solid #81c784",borderRadius:8,padding:"8px 12px",fontSize:13,cursor:"pointer",color:"#2e7d32",fontWeight:"bold"}}>
+                            {speaking===`vocab_${q.id}`?"🔊...":"🔊 聞く"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* ─── テストコーナー ─── */}
+            <div style={{background:"linear-gradient(135deg,#7b1fa2,#4a148c)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+              <h2 style={{color:"white",fontSize:16,fontWeight:"bold",margin:"0 0 2px 0"}}>🧪 テストコーナー</h2>
+              <p style={{color:"rgba(255,255,255,0.8)",fontSize:12,margin:0}}>文法・ヒアリング・単語を確認しよう！</p>
+            </div>
+
+            {/* ヒアリング */}
+            <div style={{background:"white",borderRadius:14,marginBottom:14,padding:"14px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #e1bee7"}}>
+              <p style={{fontSize:14,fontWeight:"bold",color:"#7b1fa2",marginBottom:4}}>🔊 ヒアリング問題</p>
+              <p style={{fontSize:12,color:"#888",marginBottom:12}}>音声を聞いて、正しい英文を選ぼう！</p>
+              {listeningQuiz.map((l,i)=>{
+                const selected = listeningAnswers[l.id];
+                const isCorrect = selected===l.correct;
+                return (
+                  <div key={l.id} style={{marginBottom:16,paddingBottom:16,borderBottom:i<listeningQuiz.length-1?"1px solid #f3e5f5":"none"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                      <span style={{fontSize:13,color:"#555",fontWeight:"bold"}}>Q{i+1}. {l.jp}</span>
+                      <button onClick={()=>handleSpeak(l.audio,`listen_${l.id}`)}
+                        style={{flexShrink:0,background:speaking===`listen_${l.id}`?"#ce93d8":"#f3e5f5",border:"2px solid #ce93d8",borderRadius:10,padding:"8px 16px",fontSize:14,fontWeight:"bold",cursor:"pointer",color:"#7b1fa2",boxShadow:"0 2px 6px rgba(123,31,162,0.2)"}}>
+                        {speaking===`listen_${l.id}`?"🔊 再生中...":"🔊 聞く"}
+                      </button>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {l.choices.map((c,ci)=>{
+                        let bg="#f5f5f5",border="#ddd",color="#333";
+                        if(selected){ if(c===l.correct){bg="#e8f5e9";border="#43a047";color="#2e7d32";}
+                          else if(c===selected){bg="#ffebee";border="#e53935";color="#c62828";} }
+                        return (
+                          <button key={ci} onClick={()=>handleListening(l.id,c)}
+                            style={{background:bg,border:`2px solid ${border}`,color,padding:"10px 14px",borderRadius:10,fontSize:13,cursor:selected?"default":"pointer",fontWeight:"500",textAlign:"left"}}>
+                            {ci+1}. {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selected && <p style={{fontSize:13,fontWeight:"bold",color:isCorrect?"#43a047":"#e53935",marginTop:6}}>{isCorrect?"✓ 正解！":"✗ 正解："+l.correct}</p>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 文法 */}
+            <div style={{background:"white",borderRadius:14,marginBottom:14,padding:"14px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #e1bee7"}}>
+              <p style={{fontSize:14,fontWeight:"bold",color:"#7b1fa2",marginBottom:12}}>📐 文法問題　（　）に入る単語は？</p>
+              {grammarQuiz.map((g,i)=>{
+                const selected = grammarAnswers[g.id];
+                const isCorrect = selected===g.correct;
+                return (
+                  <div key={g.id} style={{marginBottom:14,paddingBottom:14,borderBottom:i<grammarQuiz.length-1?"1px solid #f3e5f5":"none"}}>
+                    <p style={{fontSize:15,color:"#333",margin:"0 0 2px 0",fontWeight:"500"}}>Q{i+1}. {g.q}</p>
+                    <p style={{fontSize:12,color:"#888",margin:"0 0 8px 0"}}>（{g.jp}）</p>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {g.choices.map(c=>{
+                        let bg="#f5f5f5",border="#ddd",color="#333";
+                        if(selected){ if(c===g.correct){bg="#e8f5e9";border="#43a047";color="#2e7d32";}
+                          else if(c===selected){bg="#ffebee";border="#e53935";color="#c62828";} }
+                        return <button key={c} onClick={()=>handleGrammar(g.id,c)}
+                          style={{background:bg,border:`2px solid ${border}`,color,padding:"8px 18px",borderRadius:10,fontSize:15,cursor:selected?"default":"pointer",fontWeight:"bold"}}>{c}</button>;
+                      })}
+                    </div>
+                    {selected && <p style={{fontSize:13,fontWeight:"bold",color:isCorrect?"#43a047":"#e53935",marginTop:6}}>{isCorrect?"✓ 正解！":"✗ 正解は「"+g.correct+"」"}</p>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 単語マッチング（5問） */}
+            <div style={{background:"white",borderRadius:14,marginBottom:14,padding:"14px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #e1bee7"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <p style={{fontSize:14,fontWeight:"bold",color:"#7b1fa2",margin:0}}>📝 単語マッチング</p>
+                <span style={{background:"#7b1fa2",color:"white",borderRadius:20,padding:"3px 12px",fontSize:13,fontWeight:"bold"}}>{vocabScore} / 5</span>
+              </div>
+              <p style={{fontSize:12,color:"#888",marginBottom:12}}>英語 → 日本語の意味をタップして繋げよう！</p>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div>
+                  {vocabPool.map(v=>{
+                    const matched=vocabMatched[v.id];
+                    const sel=vocabSelected.left===v.id;
+                    return <button key={v.id} onClick={()=>handleVocabLeft(v.id)}
+                      style={{display:"block",width:"100%",marginBottom:6,padding:"10px 8px",borderRadius:10,fontSize:14,fontWeight:"bold",cursor:matched?"default":"pointer",textAlign:"center",
+                        background:matched?"#e8f5e9":sel?"#fff9c4":"#f5f5f5",
+                        border:`2px solid ${matched?"#43a047":sel?"#f9a825":"#ddd"}`,
+                        color:matched?"#2e7d32":sel?"#f57f17":"#333",opacity:matched?0.7:1}}>
+                      {v.en}{matched?" ✓":""}
+                    </button>;
+                  })}
+                </div>
+                <div>
+                  {shuffledVocabJp.map(v=>{
+                    const matched=vocabMatched[`jp_${v.id}`];
+                    const sel=vocabSelected.right===v.id;
+                    return <button key={v.id} onClick={()=>handleVocabRight(v.id)}
+                      style={{display:"block",width:"100%",marginBottom:6,padding:"10px 8px",borderRadius:10,fontSize:14,fontWeight:"bold",cursor:matched?"default":"pointer",textAlign:"center",
+                        background:matched?"#e8f5e9":sel?"#fff9c4":"#f5f5f5",
+                        border:`2px solid ${matched?"#43a047":sel?"#f9a825":"#ddd"}`,
+                        color:matched?"#2e7d32":sel?"#f57f17":"#333",opacity:matched?0.7:1}}>
+                      {v.jp}{matched?" ✓":""}
+                    </button>;
+                  })}
+                </div>
+              </div>
+              {vocabScore===5 && <p style={{textAlign:"center",fontSize:15,fontWeight:"bold",color:"#43a047",marginTop:10}}>🎉 全問正解！Perfect!</p>}
+            </div>
+
+            {/* エラー表示 */}
+            {submitError && (
+              <div style={{background:"#ffebee",border:"1px solid #e53935",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13,color:"#c62828"}}>
+                ⚠️ {submitError}　もう一度試してね。
+              </div>
+            )}
+            {/* 提出ボタン */}
+            <button onClick={handleSubmit} disabled={submitting}
+              style={{width:"100%",background:submitting?"#90a4ae":"linear-gradient(135deg,#1a73e8,#0d47a1)",color:"white",border:"none",padding:"18px",borderRadius:16,fontSize:17,cursor:submitting?"default":"pointer",fontWeight:"bold",boxShadow:submitting?"none":"0 4px 14px rgba(26,115,232,0.4)",marginTop:4,transition:"all 0.2s"}}>
+              {submitting ? "⏳ 送信中..." : "📬 できた！提出する"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App/>, document.getElementById("root"));
+  </script>
+</body>
+</html>
