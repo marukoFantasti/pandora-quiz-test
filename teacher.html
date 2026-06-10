@@ -33,7 +33,7 @@
     .q-card-body { padding: 8px; }
     .canvas-label { font-size: 10px; color: #888; font-weight: bold; margin-bottom: 3px; margin-top: 6px; }
     .canvas-label:first-child { margin-top: 0; }
-    .canvas-img { width: 100%; border-radius: 6px; border: 1px solid #eee; background: #fffde7; display: block; }
+    .canvas-img { width: 100%; border-radius: 6px; border: 1px solid #eee; background: #fffde7; display: block; object-fit: contain; }
     .name-section { padding: 12px 16px; border-bottom: 1px solid #eee; }
     .name-label { font-size: 11px; color: #888; font-weight: bold; margin-bottom: 4px; }
     .loading { text-align: center; padding: 60px; color: #888; font-size: 16px; }
@@ -164,11 +164,11 @@
               <div class="q-card-body">
                 ${q.equation_canvas ? `
                   <div class="canvas-label">📐 式</div>
-                  <img src="${q.equation_canvas}" class="canvas-img" />
+                  <img src="${q.equation_canvas}" class="canvas-img" style="height:75px;" />
                 ` : '<div class="no-data">式：未記入</div>'}
                 ${q.answer_canvas ? `
                   <div class="canvas-label">✍️ 答え</div>
-                  <img src="${q.answer_canvas}" class="canvas-img" />
+                  <img src="${q.answer_canvas}" class="canvas-img" style="height:60px;" />
                 ` : '<div class="no-data">答え：未記入</div>'}
               </div>
             </div>
