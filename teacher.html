@@ -149,7 +149,7 @@
         ${d.name_canvas ? `
         <div class="name-section">
           <div class="name-label">✏️ 名前 / Name</div>
-          <img src="${d.name_canvas}" style="height:70px; max-width:300px; object-fit:contain; background:#fffde7; border-radius:6px; border:1px solid #eee; display:block;" />
+          <img src="${d.name_canvas}" class="canvas-img" style="height:75px; object-fit:contain; background:#fffde7;" />
         </div>` : ''}
 
         ${mathQs.length > 0 ? `
@@ -178,13 +178,20 @@
         ${kanjiQs.length > 0 ? `
         <div style="padding:12px 16px; border-top:1px solid #eee;">
           <div class="name-label" style="margin-bottom:8px;">🈳 漢字クイズ</div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="questions-grid">
             ${kanjiQs.map(k => `
-              <div style="border:1px solid ${k.selected===k.correct?'#43a047':'#e53935'}; border-radius:8px; padding:6px 10px; min-width:80px; text-align:center;">
-                <div style="font-size:11px;color:#888;">${k.id}</div>
-                <div style="font-size:16px;font-weight:bold;color:${k.selected===k.correct?'#2e7d32':'#c62828'};">${k.selected||'未回答'}</div>
-                <div style="font-size:10px;color:#888;">正解:${k.correct}</div>
-                ${k.canvas ? `<img src="${k.canvas}" style="width:100%;height:80px;object-fit:contain;border-radius:4px;margin-top:4px;border:1px solid #eee;background:#fffde7;" />` : ''}
+              <div class="q-card">
+                <div class="q-card-header">
+                  <span class="q-num">${k.id}</span>
+                  <span style="font-size:18px;font-weight:bold;color:${k.selected===k.correct?'#2e7d32':'#c62828'};">${k.selected||'未回答'}</span>
+                  <span style="font-size:11px;color:#888;">正解:${k.correct}</span>
+                </div>
+                <div class="q-card-body">
+                  ${k.canvas ? `
+                    <div class="canvas-label">✍️ 書き取り</div>
+                    <img src="${k.canvas}" class="canvas-img" style="height:80px; object-fit:contain; background:#fffde7;" />
+                  ` : '<div class="no-data">未記入</div>'}
+                </div>
               </div>
             `).join('')}
           </div>
