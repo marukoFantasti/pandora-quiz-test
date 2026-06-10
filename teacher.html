@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 先生用確認画面</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; }
+    .header { background: linear-gradient(135deg, #1a3a6b, #0d47a1); color: white; padding: 16px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .header h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    .header p { font-size: 12px; opacity: 0.8; }
+    .container { padding: 16px; max-width: 900px; margin: 0 auto; }
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat-card { background: white; border-radius: 12px; padding: 12px 16px; flex: 1; min-width: 120px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); text-align: center; }
+    .stat-card .num { font-size: 28px; font-weight: bold; color: #1a3a6b; }
+    .stat-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+    .submission { background: white; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; border: 2px solid #dde3f0; }
+    .sub-header { background: #1a3a6b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .sub-header .name { font-size: 15px; font-weight: bold; }
+    .sub-header .time { font-size: 11px; opacity: 0.8; }
+    .scores { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px; background: #f8f9ff; border-bottom: 1px solid #eee; }
+    .score-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .score-grammar { background: #e8f5e9; color: #2e7d32; }
+    .score-listening { background: #e3f2fd; color: #1565c0; }
+    .score-vocab { background: #fff3e0; color: #e65100; }
+    .score-english { background: #f3e5f5; color: #7b1fa2; }
+    .questions-grid { padding: 12px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .q-card { border: 1px solid #dde3f0; border-radius: 10px; overflow: hidden; }
+    .q-card-header { background: #e8f0fe; padding: 6px 10px; display: flex; gap: 6px; align-items: center; }
+    .q-num { background: #1a73e8; color: white; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: bold; }
+    .q-tag { background: #fce4ec; color: #c62828; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: bold; }
+    .q-card-body { padding: 8px; }
+    .canvas-label { font-size: 10px; color: #888; font-weight: bold; margin-bottom: 3px; margin-top: 6px; }
+    .canvas-label:first-child { margin-top: 0; }
+    .canvas-img { width: 100%; border-radius: 6px; border: 1px solid #eee; background: #fffde7; display: block; }
+    .name-section { padding: 12px 16px; border-bottom: 1px solid #eee; }
+    .name-label { font-size: 11px; color: #888; font-weight: bold; margin-bottom: 4px; }
+    .loading { text-align: center; padding: 60px; color: #888; font-size: 16px; }
+    .empty { text-align: center; padding: 60px; color: #aaa; }
+    .refresh-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+    .week-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .week-btn { padding: 6px 14px; border-radius: 20px; border: 2px solid #dde3f0; background: white; font-size: 12px; cursor: pointer; font-weight: bold; color: #555; }
+    .week-btn.active { background: #1a3a6b; color: white; border-color: #1a3a6b; }
+    .english-badge { font-size: 11px; }
+    .no-data { color: #ccc; font-size: 12px; font-style: italic; padding: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 先生用確認画面</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <p id="last-updated">読み込み中...</p>
+    <button class="refresh-btn" onclick="loadData()">🔄 更新</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="stats" class="stats"></div>
+  <div id="week-filter" class="week-filter"></div>
+  <div id="submissions"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://upmflhdbhbyzoeldrvvw.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+
+  let allData = [];
+  let currentWeek = "all";
+
+  async function loadData() {
+    document.getElementById("submissions").innerHTML = '<div class="loading">⏳ 読み込み中...</div>';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions?order=submitted_at.desc&limit=100`, {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+        }
+      });
+      allData = await res.json();
+      document.getElementById("last-updated").textContent = `最終更新: ${new Date().toLocaleTimeString('ja-JP')}　${allData.length}件`;
+      renderFilters();
+      renderAll();
+    } catch(e) {
+      document.getElementById("submissions").innerHTML = `<div class="empty">⚠️ 読み込みエラー: ${e.message}</div>`;
+    }
+  }
+
+  function renderFilters() {
+    const weeks = ["all", ...new Set(allData.map(d => d.week).filter(Boolean).sort())];
+    const div = document.getElementById("week-filter");
+    div.innerHTML = weeks.map(w =>
+      `<button class="week-btn ${currentWeek==w?'active':''}" onclick="filterWeek(${w==='all'?'"all"':w})">${w==='all'?'全て':('Week '+w)}</button>`
+    ).join('');
+  }
+
+  function filterWeek(w) {
+    currentWeek = w;
+    renderFilters();
+    renderAll();
+  }
+
+  function renderAll() {
+    const filtered = currentWeek === "all" ? allData : allData.filter(d => d.week == currentWeek);
+
+    // stats
+    const avgGrammar = filtered.filter(d=>d.grammar_score!=null).reduce((a,d)=>a+d.grammar_score,0) / (filtered.filter(d=>d.grammar_score!=null).length||1);
+    const avgVocab = filtered.filter(d=>d.vocab_score!=null).reduce((a,d)=>a+d.vocab_score,0) / (filtered.filter(d=>d.vocab_score!=null).length||1);
+    document.getElementById("stats").innerHTML = `
+      <div class="stat-card"><div class="num">${filtered.length}</div><div class="label">提出数</div></div>
+      <div class="stat-card"><div class="num">${filtered.filter(d=>d.english_opened_count>0).length}</div><div class="label">+English実施</div></div>
+      <div class="stat-card"><div class="num">${isNaN(avgGrammar)?'-':avgGrammar.toFixed(1)}</div><div class="label">文法平均/3</div></div>
+      <div class="stat-card"><div class="num">${isNaN(avgVocab)?'-':avgVocab.toFixed(1)}</div><div class="label">単語平均/5</div></div>
+    `;
+
+    if(filtered.length === 0) {
+      document.getElementById("submissions").innerHTML = '<div class="empty">📭 データがありません</div>';
+      return;
+    }
+
+    document.getElementById("submissions").innerHTML = filtered.map(d => renderSubmission(d)).join('');
+  }
+
+  function renderSubmission(d) {
+    const date = d.submitted_at ? new Date(d.submitted_at).toLocaleString('ja-JP') : '日時不明';
+    const questions = d.questions || [];
+    const mathQs = Array.isArray(questions) ? questions : (questions.math || []);
+    const kanjiQs = Array.isArray(questions) ? [] : (questions.kanji || []);
+
+    const englishOpened = d.english_opened_count || 0;
+
+    return `
+      <div class="submission">
+        <div class="sub-header">
+          <div class="name">📝 Week ${d.week || '?'}　${date}</div>
+          <div class="time">学年: ${d.grade || '?'}年</div>
+        </div>
+
+        ${(d.grammar_score!=null || d.listening_score!=null || d.vocab_score!=null) ? `
+        <div class="scores">
+          ${d.grammar_score!=null ? `<span class="score-badge score-grammar">文法 ${d.grammar_score}/3</span>` : ''}
+          ${d.listening_score!=null ? `<span class="score-badge score-listening">ヒアリング ${d.listening_score}/3</span>` : ''}
+          ${d.vocab_score!=null ? `<span class="score-badge score-vocab">単語 ${d.vocab_score}/5</span>` : ''}
+          ${englishOpened > 0 ? `<span class="score-badge score-english">+English ${englishOpened}/10問</span>` : '<span class="score-badge" style="background:#f5f5f5;color:#999">+English 未実施</span>'}
+        </div>` : ''}
+
+        ${d.name_canvas ? `
+        <div class="name-section">
+          <div class="name-label">✏️ 名前 / Name</div>
+          <img src="${d.name_canvas}" class="canvas-img" style="max-height:60px; object-fit:contain;" />
+        </div>` : ''}
+
+        ${mathQs.length > 0 ? `
+        <div class="questions-grid">
+          ${mathQs.map((q,i) => `
+            <div class="q-card">
+              <div class="q-card-header">
+                <span class="q-num">Q${i+1}</span>
+                ${q.math_tag ? `<span class="q-tag">${q.math_tag}</span>` : ''}
+                ${q.english_opened ? '<span class="english-badge">🌍</span>' : ''}
+              </div>
+              <div class="q-card-body">
+                ${q.equation_canvas ? `
+                  <div class="canvas-label">📐 式</div>
+                  <img src="${q.equation_canvas}" class="canvas-img" />
+                ` : '<div class="no-data">式：未記入</div>'}
+                ${q.answer_canvas ? `
+                  <div class="canvas-label">✍️ 答え</div>
+                  <img src="${q.answer_canvas}" class="canvas-img" />
+                ` : '<div class="no-data">答え：未記入</div>'}
+              </div>
+            </div>
+          `).join('')}
+        </div>` : ''}
+
+        ${kanjiQs.length > 0 ? `
+        <div style="padding:12px 16px; border-top:1px solid #eee;">
+          <div class="name-label" style="margin-bottom:8px;">🈳 漢字クイズ</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            ${kanjiQs.map(k => `
+              <div style="border:1px solid ${k.selected===k.correct?'#43a047':'#e53935'}; border-radius:8px; padding:6px 10px; min-width:80px; text-align:center;">
+                <div style="font-size:11px;color:#888;">${k.id}</div>
+                <div style="font-size:16px;font-weight:bold;color:${k.selected===k.correct?'#2e7d32':'#c62828'};">${k.selected||'未回答'}</div>
+                <div style="font-size:10px;color:#888;">正解:${k.correct}</div>
+                ${k.canvas ? `<img src="${k.canvas}" style="width:100%;border-radius:4px;margin-top:4px;border:1px solid #eee;" />` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  loadData();
+  // 3分ごとに自動更新
+  setInterval(loadData, 180000);
+</script>
+</body>
+</html>
