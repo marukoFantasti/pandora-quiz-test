@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日本語レベルチェック / Japanese Level Check</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #f0f4ff; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const LEVELS = ["N5","N4","N3","N2","N1","native"];
+const LEVEL_IDX = { N5:0, N4:1, N3:2, N2:3, N1:4, native:5 };
+const LEVEL_COLORS = { N5:"#43a047", N4:"#1a9fd4", N3:"#7b1fa2", N2:"#e65100", N1:"#c62828", native:"#5c35c9" };
+const LEVEL_DESC = {
+  N5:"ひらがな・カタカナのみ / Hiragana & Katakana only",
+  N4:"基本の漢字（小1-2）/ Basic kanji (Grade 1-2)",
+  N3:"日常の漢字（小3-4）/ Everyday kanji (Grade 3-4)",
+  N2:"中級の漢字（小5-中1）/ Intermediate kanji",
+  N1:"上級の漢字（中2-3）/ Advanced kanji",
+  native:"漢字フル使用 / Full kanji",
+};
+const LEVEL_ADVICE = {
+  N5:"ひらがなのみの問題文で学習を始めましょう。/ Start with hiragana-only problems.",
+  N4:"基本漢字＋ふりがなありの問題がおすすめです。/ Try problems with basic kanji and furigana.",
+  N3:"日常漢字を使った問題で読解力を鍛えましょう。/ Build skills with everyday kanji.",
+  N2:"ふりがななしの中級問題に挑戦できます。/ Try intermediate problems without furigana.",
+  N1:"上級問題でさらなるレベルアップを。/ Push further with advanced problems.",
+  native:"漢字フル使用の問題に対応できます。/ You can handle full kanji problems.",
+};
+
+// ─── 前半：適応型日本語クイズ問題プール ─────────────────────
+// カテゴリ: reading(漢字読み), vocab(語彙意味), particle(助詞), sentence(文意)
+const JP_QUIZ_POOL = [
+  // N5
+  {id:"r_N5_1", level:"N5", cat:"reading", q:"「山」の読みかたは？/ How do you read 「山」?", choices:["やま","かわ","もり","うみ"], correct:"やま", en:"'山' means mountain"},
+  {id:"r_N5_2", level:"N5", cat:"reading", q:"「火」の読みかたは？/ How do you read 「火」?", choices:["みず","ひ","かぜ","つち"], correct:"ひ", en:"'火' means fire"},
+  {id:"v_N5_1", level:"N5", cat:"vocab", q:"「おおきい」はどれですか？/ What does 「おおきい」 mean?", choices:["big / 大きい","small / 小さい","fast / 速い","red / 赤い"], correct:"big / 大きい", en:"おおきい = big"},
+  {id:"p_N5_1", level:"N5", cat:"particle", q:"りんごが 1こ（　）あります。/ There is 1 apple ___.", choices:["に","は","を","が"], correct:"が", en:"が is the subject marker. 'There IS one apple'"},
+  // N4
+  {id:"r_N4_1", level:"N4", cat:"reading", q:"「食べる」の読みかたは？/ How do you read 「食べる」?", choices:["たべる","のむ","つくる","みる"], correct:"たべる", en:"'食べる' means to eat"},
+  {id:"r_N4_2", level:"N4", cat:"reading", q:"「学校」の読みかたは？/ How do you read 「学校」?", choices:["がっこう","びょういん","としょかん","こうえん"], correct:"がっこう", en:"'学校' means school"},
+  {id:"v_N4_1", level:"N4", cat:"vocab", q:"「合計」の意味は？/ What does 「合計」 mean?", choices:["total / 全部で","difference / 差","average / 平均","half / 半分"], correct:"total / 全部で", en:"合計 = total, all together"},
+  {id:"p_N4_1", level:"N4", cat:"particle", q:"りんごが 1箱（　）5こ 入っています。", choices:["に","は","を","で"], correct:"に", en:"に indicates location/contents. '5 apples IN one box'"},
+  {id:"s_N4_1", level:"N4", cat:"sentence", q:"「3×8の答えを書きなさい。」の意味は？/ What does this sentence mean?", choices:["Write the answer to 3×8","Read 3×8 aloud","Draw a picture of 3×8","Count to 8 by 3s"], correct:"Write the answer to 3×8", en:"書きなさい = please write"},
+  // N3
+  {id:"r_N3_1", level:"N3", cat:"reading", q:"「配る」の読みかたは？/ How do you read 「配る」?", choices:["くばる","つくる","おくる","もらう"], correct:"くばる", en:"'配る' means to give out / hand out"},
+  {id:"r_N3_2", level:"N3", cat:"reading", q:"「計算」の読みかたは？/ How do you read 「計算」?", choices:["けいさん","かんさん","けいかく","さんすう"], correct:"けいさん", en:"'計算' means calculation"},
+  {id:"v_N3_1", level:"N3", cat:"vocab", q:"「等分」の意味は？/ What does 「等分」 mean?", choices:["divide equally","add together","multiply","measure"], correct:"divide equally", en:"等分 = split into equal groups"},
+  {id:"p_N3_1", level:"N3", cat:"particle", q:"500円を4人（　）同じように分けます。", choices:["で","に","を","が"], correct:"で", en:"で = by / using. 'split BY 4 people'"},
+  {id:"s_N3_1", level:"N3", cat:"sentence", q:"「テープを9本に分けます。」の意味は？", choices:["Divide the tape into 9 pieces","Tape 9 pieces together","Cut 9 cm of tape","Measure 9 pieces of tape"], correct:"Divide the tape into 9 pieces", en:"分けます = to split / share"},
+  {id:"s_N3_2", level:"N3", cat:"sentence", q:"「1人分はいくらになりますか。」の意味は？", choices:["How much is each person's share?","How many people are there?","How much in total?","Who gets the most?"], correct:"How much is each person's share?", en:"1人分 = each person's amount"},
+  // N2
+  {id:"r_N2_1", level:"N2", cat:"reading", q:"「用意」の読みかたは？/ How do you read 「用意」?", choices:["ようい","ようじ","ようが","ようけい"], correct:"ようい", en:"'用意' means to get ready / prepare"},
+  {id:"r_N2_2", level:"N2", cat:"reading", q:"「売り上げ」の読みかたは？/ How do you read 「売り上げ」?", choices:["うりあげ","かいあげ","とりあげ","みあげ"], correct:"うりあげ", en:"'売り上げ' means money you made from selling"},
+  {id:"v_N2_1", level:"N2", cat:"vocab", q:"「あまり」の算数での意味は？/ What does 「あまり」 mean in math?", choices:["what's left over","the answer","the total","the sum"], correct:"what's left over", en:"あまり = what's left over"},
+  {id:"p_N2_1", level:"N2", cat:"particle", q:"家を出てから学校に着く（　）、何分かかりますか。", choices:["まで","から","ので","けど"], correct:"まで", en:"まで = until. 'until you get to school'"},
+  {id:"s_N2_1", level:"N2", cat:"sentence", q:"「1分間に80m歩きます。」の意味は？", choices:["He walks 80m per minute","He walks for 80 minutes","He walks 80 steps","He walks 1 minute per 80m"], correct:"He walks 80m per minute", en:"1分間に = every minute / in one minute"},
+  {id:"s_N2_2", level:"N2", cat:"sentence", q:"「もし〜としたら、何分かかりますか。」の意味は？", choices:["If ~, how many minutes would it take?","How many minutes did it take?","When will it take ~ minutes?","Why does it take minutes?"], correct:"If ~, how many minutes would it take?", en:"もし〜としたら = what if ~? / if ~ were true"},
+  // N1
+  {id:"r_N1_1", level:"N1", cat:"reading", q:"「文化祭」の読みかたは？/ How do you read 「文化祭」?", choices:["ぶんかさい","ぶんかてん","ぶんかかい","ぶんかし"], correct:"ぶんかさい", en:"'文化祭' means school cultural festival"},
+  {id:"r_N1_2", level:"N1", cat:"reading", q:"「平均」の読みかたは？/ How do you read 「平均」?", choices:["へいきん","へいわ","へいせい","へいたん"], correct:"へいきん", en:"'平均' means average"},
+  {id:"v_N1_1", level:"N1", cat:"vocab", q:"「9等分」の意味は？/ What does 「9等分」 mean?", choices:["divided into 9 equal parts","9 times as large","9th position","9 groups of any size"], correct:"divided into 9 equal parts", en:"9等分 = split into 9 equal pieces"},
+  {id:"s_N1_1", level:"N1", cat:"sentence", q:"「クラスでジュースを売ることになりました。」の意味は？", choices:["It was decided the class would sell juice","The class was buying juice","The teacher sold juice to the class","Juice was given to the class"], correct:"It was decided the class would sell juice", en:"〜ことになりました = they decided to ~ / it was decided to ~"},
+  // native
+  {id:"r_nat_1", level:"N3", cat:"reading", q:"「割合」の読みかたは？/ How do you read 「割合」?", choices:["わりあい","かっこう","ぶんりつ","わりき"], correct:"わりあい", en:"'割合' means ratio / proportion / percentage"},
+  {id:"v_nat_1", level:"native", cat:"vocab", q:"「余り」の読みかたと意味は？", choices:["あまり・remainder","のこり・leftover","へん・strange","よけい・extra"], correct:"あまり・remainder", en:"余り (あまり) = what's left over when you divide"},
+  {id:"s_nat_1", level:"native", cat:"sentence", q:"「工作の時間に先生がリボンを用意しました。」の意味は？", choices:["The teacher prepared ribbon during craft time","The teacher cut ribbon in class","Students made ribbon in craft class","The teacher measured ribbon time"], correct:"The teacher prepared ribbon during craft time", en:"用意する = to prepare / get ready"},
+];
+
+// カテゴリラベル
+const CAT_LABEL = { reading:"漢字読み / Kanji Reading", vocab:"語彙 / Vocabulary", particle:"助詞 / Particles", sentence:"文意 / Sentence Meaning" };
+const CAT_COLOR = { reading:"#7b1fa2", vocab:"#1a9fd4", particle:"#e65100", sentence:"#43a047" };
+
+// ─── 後半：算数問題（主観評価） ──────────────────────────────
+const MATH_QUESTIONS = [
+  {id:"m1", type:"short", math:"3 × 8 = ?", answer:"24", unit:"",
+   jp:"3かける8の答えを書きなさい。",
+   reading:"さんかける はちの こたえを かきなさい。",
+   en:"What is 3 times 8? Write the answer."},
+  {id:"m2", type:"short", math:"56 ÷ 7 = ?", answer:"8", unit:"",
+   jp:"56÷7を計算して、答えを書きなさい。",
+   reading:"ごじゅうろくわるなな を けいさんして、こたえを かきなさい。",
+   en:"What is 56 ÷ 7? Write the answer."},
+  {id:"m3", type:"medium", math:"5個 × 6箱 = ?個", answer:"30", unit:"個",
+   jp:"りんごが1箱に5個入っています。6箱では、りんごは全部で何個になりますか。",
+   reading:"りんごが ひとはこに ごこ はいっています。むっぱこでは りんごは ぜんぶで なんこに なりますか。",
+   en:"There are 5 apples in one box. How many apples are there in 6 boxes?"},
+  {id:"m4", type:"medium", math:"1m20cm = ?cm", answer:"120", unit:"cm",
+   jp:"テープの長さをはかったら、1m20cmありました。これは何cmですか。",
+   reading:"てーぷの ながさを はかったら いちめーとる にじゅっせんち ありました。これは なんせんちですか。",
+   en:"The tape is 1m 20cm long. How many cm is that?"},
+  {id:"m5", type:"medium", math:"500 ÷ 4 = ?", answer:"125", unit:"円",
+   jp:"500円を4人で同じように分けます。1人分はいくらになりますか。また、あまりは出ますか。",
+   reading:"ごひゃくえんを よにんで おなじように わけます。ひとりぶんは いくらに なりますか。また、あまりは でますか。",
+   en:"500 yen is shared equally among 4 people. How much does each person get? Is there any left over?"},
+  {id:"m6", type:"long", math:"72cm ÷ 9 = ?cm", answer:"8", unit:"cm",
+   jp:"工作の時間に、先生が72cmのリボンを用意しました。このリボンを9人の生徒に同じ長さずつ配ります。1人分のリボンの長さは何cmですか。",
+   reading:"こうさくの じかんに せんせいが ななじゅうにせんちの りぼんを ようい しました。このりぼんを きゅうにんの せいとに おなじ ながさずつ くばります。ひとりぶんの りぼんの ながさは なんせんちですか。",
+   en:"The teacher has 72cm of ribbon. She gives the same amount to each of 9 students. How much does each student get?"},
+  {id:"m7", type:"long", math:"125 × 4 = ?円", answer:"500", unit:"円",
+   jp:"学校の文化祭で、クラスでジュースを売ることになりました。ジュースは1本125円です。午前中に4本売れました。午前中の売り上げは合計何円ですか。",
+   reading:"がっこうの ぶんかさいで くらすで じゅーすを うることに なりました。じゅーすは いっぽん ひゃくにじゅうごえんです。ごぜんちゅうに よんほん うれました。ごぜんちゅうの うりあげは ごうけい なんえんですか。",
+   en:"The class sells juice for 125 yen each. They sold 4 bottles in the morning. How much money did they make?"},
+  {id:"m8", type:"long", math:"800m ÷ 80m/分 = ?分", answer:"10分、8分", unit:"",
+   jp:"たろうくんの家から学校まで800mあります。たろうくんは1分間に80m歩きます。家を出てから学校に着くまで、何分かかりますか。また、もし1分間に100m歩いたとしたら、何分かかりますか。",
+   reading:"たろうくんの いえから がっこうまで はっぴゃくめーとる あります。たろうくんは いっぷんかんに はちじゅうめーとる あるきます。いえを でてから がっこうに つくまで なんぷん かかりますか。また、もし いっぷんかんに ひゃくめーとる あるいたとしたら なんぷん かかりますか。",
+   en:"Taro's house is 800m from school. He walks 80m every minute. How many minutes to school? What if he walked 100m every minute?"},
+];
+
+const TYPE_LABEL = { short:"短文 / Short", medium:"中文 / Medium", long:"長文 / Long" };
+const TYPE_BG = { short:"#e8f5e9", medium:"#fff3e0", long:"#fce4ec" };
+const TYPE_COLOR = { short:"#2e7d32", medium:"#e65100", long:"#c62828" };
+
+// ─── レベル判定 ────────────────────────────────────────────
+function calcFinalLevel(adaptiveLevel, mathScore) {
+  const objIdx = LEVEL_IDX[adaptiveLevel] || 0;
+  const maxMath = MATH_QUESTIONS.length * 2;
+  const mathIdx = Math.round((mathScore / maxMath) * 5);
+  const finalIdx = Math.round(objIdx * 0.6 + mathIdx * 0.4);
+  return LEVELS[Math.min(Math.max(finalIdx, 0), 5)];
+}
+
+// ─── メインApp ─────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = React.useState("start"); // start | part1 | transition | part2 | result
+  const [speaking, setSpeaking] = React.useState(null);
+
+  // Part1 状態
+  const [p1Idx, setP1Idx] = React.useState(0); // 0-7
+  const [currentLevel, setCurrentLevel] = React.useState(2); // N3=2からスタート
+  const [usedIds, setUsedIds] = React.useState([]);
+  const [currentQ, setCurrentQ] = React.useState(null);
+  const [p1Chosen, setP1Chosen] = React.useState(null);
+  const [p1Results, setP1Results] = React.useState([]);
+  const [showEnP1, setShowEnP1] = React.useState(false);
+
+  // Part2 状態
+  const [p2Idx, setP2Idx] = React.useState(0);
+  const [p2Chosen, setP2Chosen] = React.useState(null);
+  const [p2Results, setP2Results] = React.useState([]);
+  const [showAnswerP2, setShowAnswerP2] = React.useState(false);
+  const [showEnP2, setShowEnP2] = React.useState(false);
+
+  const speak = (text) => {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP"; u.rate = 0.8;
+    setSpeaking(text);
+    u.onend = () => setSpeaking(null);
+    window.speechSynthesis.speak(u);
+  };
+
+  // Part1: 次の問題を選ぶ
+  const pickQuestion = (levelIdx, excludeIds) => {
+    const lvl = LEVELS[Math.min(Math.max(levelIdx, 0), 5)];
+    const pool = JP_QUIZ_POOL.filter(q => q.level === lvl && !excludeIds.includes(q.id));
+    if (pool.length === 0) {
+      const fallback = JP_QUIZ_POOL.filter(q => !excludeIds.includes(q.id));
+      if (fallback.length === 0) return null;
+      return fallback[Math.floor(Math.random() * fallback.length)];
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  const startPart1 = () => {
+    const q = pickQuestion(2, []);
+    setCurrentQ(q);
+    setUsedIds(q ? [q.id] : []);
+    setPhase("part1");
+  };
+
+  const handleP1Answer = (choice) => {
+    if (p1Chosen !== null || !currentQ) return;
+    setP1Chosen(choice);
+    const correct = choice === currentQ.correct;
+    const newLevel = correct
+      ? Math.min(currentLevel + 1, 5)
+      : Math.max(currentLevel - 1, 0);
+    const newResults = [...p1Results, { q: currentQ, chosen: choice, correct, level: LEVELS[currentLevel] }];
+
+    setTimeout(() => {
+      if (p1Idx < 7) {
+        const newUsed = [...usedIds, currentQ.id];
+        const next = pickQuestion(newLevel, newUsed);
+        setP1Idx(p1Idx + 1);
+        setCurrentLevel(newLevel);
+        setUsedIds(next ? [...newUsed, next.id] : newUsed);
+        setCurrentQ(next);
+        setP1Chosen(null);
+        setShowEnP1(false);
+        setP1Results(newResults);
+      } else {
+        setP1Results(newResults);
+        setPhase("transition");
+      }
+    }, 900);
+  };
+
+  const handleP2Choice = (val) => {
+    if (p2Chosen !== null) return;
+    setP2Chosen(val);
+    const score = val === "easy" ? 2 : val === "ok" ? 1 : 0;
+    const newResults = [...p2Results, { q: MATH_QUESTIONS[p2Idx], score, val }];
+    setTimeout(() => {
+      if (p2Idx < MATH_QUESTIONS.length - 1) {
+        setP2Idx(p2Idx + 1);
+        setP2Chosen(null);
+        setShowAnswerP2(false);
+        setShowEnP2(false);
+        setP2Results(newResults);
+      } else {
+        setP2Results(newResults);
+        setPhase("result");
+      }
+    }, 800);
+  };
+
+  const retry = () => {
+    setPhase("start");
+    setP1Idx(0); setCurrentLevel(2); setUsedIds([]); setCurrentQ(null);
+    setP1Chosen(null); setP1Results([]); setShowEnP1(false);
+    setP2Idx(0); setP2Chosen(null); setP2Results([]);
+    setShowAnswerP2(false); setShowEnP2(false);
+  };
+
+  // ─── スタート画面 ─────────────────────────────────────────
+  if (phase === "start") {
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+        <div style={{background:"white",borderRadius:20,padding:"28px 24px",maxWidth:460,width:"100%",boxShadow:"0 4px 24px rgba(0,0,0,0.1)",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:10}}>🇯🇵</div>
+          <h1 style={{fontSize:21,fontWeight:"bold",color:"#1a1a1a",margin:"0 0 4px 0"}}>日本語レベルチェック</h1>
+          <p style={{fontSize:13,color:"#555",margin:"0 0 4px 0"}}>Japanese Level Check</p>
+          <p style={{fontSize:11,color:"#888",margin:"0 0 18px 0"}}>16問でN5〜nativeレベルを判定します / 16 questions to determine your level</p>
+          <div style={{background:"#f8f9ff",borderRadius:12,padding:"14px",marginBottom:16,textAlign:"left"}}>
+            <p style={{fontSize:12,color:"#333",fontWeight:"bold",margin:"0 0 10px 0"}}>チェックの流れ / How it works</p>
+            {[
+              ["前半8問","Part 1","適応型日本語クイズ（正解で上、不正解で下にレベル調整）","Adaptive Japanese quiz — level adjusts up/down based on your answers","#e8f0fe","#1a73e8"],
+              ["後半8問","Part 2","算数問題の日本語読解（すらすら／なんとか／むずかしい）","Math problems in Japanese — rate how easily you could read each","#fce4ec","#c62828"],
+            ].map(([jp,en,descJp,descEn,bg,color]) => (
+              <div key={jp} style={{background:bg,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
+                  <span style={{background:color,color:"white",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>{jp}</span>
+                  <span style={{fontSize:11,color:color,fontWeight:"bold"}}>{en}</span>
+                </div>
+                <p style={{fontSize:11,color:"#555",margin:"0 0 2px 0"}}>{descJp}</p>
+                <p style={{fontSize:10,color:"#888",margin:0}}>{descEn}</p>
+              </div>
+            ))}
+          </div>
+          <button onClick={startPart1}
+            style={{width:"100%",background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",border:"none",padding:"15px",borderRadius:14,fontSize:15,fontWeight:"bold",cursor:"pointer",boxShadow:"0 4px 12px rgba(26,159,212,0.3)"}}>
+            スタート！ / Start 🚀
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── 中間画面 ──────────────────────────────────────────────
+  if (phase === "transition") {
+    const finalP1Level = LEVELS[currentLevel];
+    const color = LEVEL_COLORS[finalP1Level];
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+        <div style={{background:"white",borderRadius:20,padding:"28px 24px",maxWidth:420,width:"100%",boxShadow:"0 4px 24px rgba(0,0,0,0.1)",textAlign:"center"}}>
+          <div style={{fontSize:40,marginBottom:10}}>✅</div>
+          <h2 style={{fontSize:18,fontWeight:"bold",margin:"0 0 6px 0"}}>前半完了！ / Part 1 Done!</h2>
+          <p style={{fontSize:12,color:"#888",margin:"0 0 16px 0"}}>日本語クイズの結果 / Quiz result</p>
+          <div style={{background:`${color}15`,border:`2px solid ${color}`,borderRadius:12,padding:"14px",marginBottom:16}}>
+            <p style={{fontSize:11,color:"#888",margin:"0 0 4px 0"}}>客観的レベル / Objective Level</p>
+            <div style={{fontSize:44,fontWeight:"bold",color,margin:"0 0 4px 0"}}>{finalP1Level}</div>
+            <p style={{fontSize:12,color:"#555",margin:0}}>{LEVEL_DESC[finalP1Level]}</p>
+          </div>
+          <div style={{background:"#f8f9ff",borderRadius:10,padding:"12px",marginBottom:16,textAlign:"left"}}>
+            <p style={{fontSize:12,color:"#555",margin:"0 0 4px 0"}}>次は後半です。同じ日本語レベルの算数問題が8問出ます。どのくらい「読めた」か主観的に答えてください。</p>
+            <p style={{fontSize:11,color:"#888",margin:0}}>Next: 8 math problems in Japanese. Rate how easily you could read each one.</p>
+          </div>
+          <button onClick={() => setPhase("part2")}
+            style={{width:"100%",background:"linear-gradient(135deg,#e65100,#bf360c)",color:"white",border:"none",padding:"14px",borderRadius:14,fontSize:15,fontWeight:"bold",cursor:"pointer",boxShadow:"0 4px 12px rgba(230,81,0,0.3)"}}>
+            後半スタート！ / Start Part 2 🔢
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Part1: 適応型クイズ ────────────────────────────────────
+  if (phase === "part1") {
+    if (!currentQ) return <div style={{padding:20,textAlign:"center"}}>Loading...</div>;
+    const lvl = LEVELS[currentLevel];
+    const lc = LEVEL_COLORS[lvl];
+    const cat = currentQ.cat;
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:60}}>
+        <div style={{background:"linear-gradient(135deg,#1a73e8,#0d47a1)",color:"white",padding:"12px 16px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <div>
+              <p style={{fontSize:13,fontWeight:"bold",margin:0}}>前半 / Part 1　日本語クイズ</p>
+              <p style={{fontSize:10,opacity:0.8,margin:0}}>Adaptive Japanese Quiz</p>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:10,opacity:0.8}}>進捗</div>
+              <div style={{fontSize:15,fontWeight:"bold"}}>{p1Idx+1} / 8</div>
+            </div>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.3)",borderRadius:10,height:5}}>
+            <div style={{background:"white",borderRadius:10,height:5,width:`${(p1Idx/8)*100}%`,transition:"width 0.3s"}}/>
+          </div>
+        </div>
+
+        <div style={{padding:"16px 14px"}}>
+          <div style={{background:"white",borderRadius:16,border:`2px solid ${p1Chosen !== null ? (p1Chosen === currentQ.correct ? "#43a047" : "#e53935") : "#dde3f0"}`,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <div style={{background:`linear-gradient(90deg,${lc},${lc}bb)`,padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{background:"rgba(255,255,255,0.2)",color:"white",borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{CAT_LABEL[cat]}</span>
+              <span style={{color:"white",fontSize:11,opacity:0.9}}>レベル {lvl}</span>
+            </div>
+
+            <div style={{padding:"16px 14px"}}>
+              <p style={{fontSize:17,lineHeight:1.9,color:"#1a1a1a",fontWeight:"600",margin:"0 0 16px 0"}}>{currentQ.q}</p>
+
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {currentQ.choices.map((c, i) => {
+                  let bg = "#f8f9ff", border = "#e0e0ff", color = "#333";
+                  if (p1Chosen !== null) {
+                    if (c === currentQ.correct) { bg = "#e8f5e9"; border = "#43a047"; color = "#2e7d32"; }
+                    else if (c === p1Chosen && c !== currentQ.correct) { bg = "#ffebee"; border = "#e53935"; color = "#c62828"; }
+                  }
+                  return (
+                    <button key={i} onClick={() => handleP1Answer(c)}
+                      style={{padding:"12px 16px",borderRadius:12,border:`2px solid ${border}`,background:bg,color,fontSize:14,cursor:p1Chosen!==null?"default":"pointer",fontWeight:"500",textAlign:"left",fontFamily:"inherit",transition:"all 0.15s"}}>
+                      <span style={{color:"#aaa",marginRight:8,fontSize:12}}>{["A","B","C","D"][i]}.</span>{c}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {p1Chosen !== null && (
+                <div style={{marginTop:12,background:p1Chosen===currentQ.correct?"#e8f5e9":"#ffebee",borderRadius:10,padding:"10px 14px",border:`1px solid ${p1Chosen===currentQ.correct?"#a5d6a7":"#ef9a9a"}`}}>
+                  <p style={{fontSize:13,fontWeight:"bold",color:p1Chosen===currentQ.correct?"#2e7d32":"#c62828",margin:"0 0 3px 0"}}>
+                    {p1Chosen===currentQ.correct ? "✓ 正解！/ Correct!" : `✗ 不正解 / Incorrect　正解：${currentQ.correct}`}
+                  </p>
+                  <p style={{fontSize:11,color:"#555",margin:0}}>{currentQ.en}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Part2: 算数問題主観評価 ─────────────────────────────────
+  if (phase === "part2") {
+    const mq = MATH_QUESTIONS[p2Idx];
+    if (!mq) return null;
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:60}}>
+        <div style={{background:"linear-gradient(135deg,#e65100,#bf360c)",color:"white",padding:"12px 16px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <div>
+              <p style={{fontSize:13,fontWeight:"bold",margin:0}}>後半 / Part 2　算数で日本語チェック</p>
+              <p style={{fontSize:10,opacity:0.8,margin:0}}>Math Reading Check</p>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:10,opacity:0.8}}>進捗</div>
+              <div style={{fontSize:15,fontWeight:"bold"}}>{p2Idx+1} / 8</div>
+            </div>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.3)",borderRadius:10,height:5}}>
+            <div style={{background:"white",borderRadius:10,height:5,width:`${(p2Idx/8)*100}%`,transition:"width 0.3s"}}/>
+          </div>
+        </div>
+
+        <div style={{padding:"16px 14px"}}>
+          <div style={{background:"white",borderRadius:16,border:`2px solid ${p2Chosen!==null?(p2Chosen==="easy"?"#43a047":p2Chosen==="ok"?"#ff9800":"#e53935"):"#dde3f0"}`,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <div style={{background:"linear-gradient(90deg,#e65100,#e6510099)",padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{color:"white",fontSize:13,fontWeight:"bold"}}>問題 {p2Idx+1} / 8</span>
+              <span style={{background:TYPE_BG[mq.type],color:TYPE_COLOR[mq.type],borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:"bold"}}>{TYPE_LABEL[mq.type]}</span>
+            </div>
+
+            <div style={{padding:"16px 14px"}}>
+              <div style={{background:"#f8f9ff",borderRadius:10,padding:"10px 14px",marginBottom:14,border:"1px solid #e8eaff"}}>
+                <div style={{fontSize:11,color:"#888",marginBottom:3}}>Math / 算数</div>
+                <div style={{fontSize:18,fontWeight:"bold",color:"#1a237e",fontFamily:"monospace"}}>{mq.math}</div>
+              </div>
+
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:11,color:"#888",marginBottom:6}}>日本語の問題文 / Japanese question</div>
+                <p style={{fontSize:mq.type==="long"?15:17,lineHeight:2.1,color:"#1a1a1a",fontWeight:"500",margin:0}}>{mq.jp}</p>
+              </div>
+
+              <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+                <button onClick={() => speak(mq.reading)}
+                  style={{background:speaking===mq.reading?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===mq.reading?"#1a9fd4":"#ddd"}`,color:speaking===mq.reading?"#1a9fd4":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                  {speaking===mq.reading?"🔊 Playing...":"🔊 読んでみよう"}
+                </button>
+                <button onClick={() => setShowEnP2(p=>!p)}
+                  style={{background:showEnP2?"#e8f5e9":"#f5f5f5",border:`1px solid ${showEnP2?"#43a047":"#ddd"}`,color:showEnP2?"#2e7d32":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                  {showEnP2?"▲ 隠す":"🇬🇧 英語で確認"}
+                </button>
+              </div>
+
+              {showEnP2 && (
+                <div style={{background:"#e8f5e9",borderRadius:10,padding:"10px 14px",marginBottom:12,border:"1px solid #a5d6a7"}}>
+                  <p style={{fontSize:13,color:"#2e7d32",fontStyle:"italic",margin:0}}>{mq.en}</p>
+                </div>
+              )}
+
+              {p2Chosen === null ? (
+                <div>
+                  <p style={{fontSize:12,color:"#333",marginBottom:8,fontWeight:"bold"}}>
+                    この問題文はどのくらい読めましたか？<br/>
+                    <span style={{fontSize:11,color:"#888",fontWeight:"normal"}}>How well could you read this question?</span>
+                  </p>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {[
+                      ["easy","✓✓","すらすら読めた","Read easily","問題文がすんなり理解できた","#e8f5e9","#a5d6a7","#2e7d32"],
+                      ["ok","△","なんとか読めた","Read with effort","時間がかかったが理解できた","#fff3e0","#ffcc80","#e65100"],
+                      ["hard","✗","むずかしかった","Too difficult","読めない言葉があった","#ffebee","#ef9a9a","#c62828"],
+                    ].map(([val,icon,jp,en,sub,bg,bdr,clr]) => (
+                      <button key={val} onClick={() => handleP2Choice(val)}
+                        style={{padding:"12px 14px",borderRadius:12,border:`2px solid ${bdr}`,background:bg,color:clr,fontSize:14,fontWeight:"bold",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,fontFamily:"inherit"}}>
+                        <span style={{fontSize:20,flexShrink:0}}>{icon}</span>
+                        <div>
+                          <div>{jp} / {en}</div>
+                          <div style={{fontSize:11,fontWeight:"normal",opacity:0.75}}>{sub}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{background:p2Chosen==="easy"?"#e8f5e9":p2Chosen==="ok"?"#fff3e0":"#ffebee",borderRadius:10,padding:"12px 14px",border:`1px solid ${p2Chosen==="easy"?"#a5d6a7":p2Chosen==="ok"?"#ffcc80":"#ef9a9a"}`}}>
+                  <p style={{fontSize:13,fontWeight:"bold",color:p2Chosen==="easy"?"#2e7d32":p2Chosen==="ok"?"#e65100":"#c62828",margin:"0 0 2px 0"}}>
+                    {p2Chosen==="easy"?"✓✓ すらすら読めた！":p2Chosen==="ok"?"△ なんとか読めた":"✗ むずかしかった"}
+                  </p>
+                  <p style={{fontSize:11,color:"#888",margin:0}}>次の問題へ... / Moving on...</p>
+                </div>
+              )}
+
+              <div style={{marginTop:12}}>
+                <button onClick={() => setShowAnswerP2(p=>!p)}
+                  style={{fontSize:12,color:"#888",background:"none",border:"1px solid #ddd",borderRadius:6,padding:"4px 10px",cursor:"pointer"}}>
+                  {showAnswerP2?"▲ 答えを隠す":"▼ 答えを見る / Check answer"}
+                </button>
+                {showAnswerP2 && (
+                  <div style={{marginTop:6,background:"#f1f8e9",borderRadius:8,padding:"8px 12px",border:"1px solid #c8e6c9"}}>
+                    <span style={{fontSize:13,color:"#2e7d32",fontWeight:"bold"}}>答え / Answer：{mq.answer}{mq.unit}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── 結果画面 ────────────────────────────────────────────────
+  if (phase === "result") {
+    const p1FinalLevel = LEVELS[Math.min(Math.max(currentLevel, 0), 5)];
+    const p2TotalScore = p2Results.reduce((sum, r) => sum + r.score, 0);
+    const finalLevel = calcFinalLevel(p1FinalLevel, p2TotalScore);
+    const rc = LEVEL_COLORS[finalLevel];
+    const p1Correct = p1Results.filter(r => r.correct).length;
+    const p2Max = MATH_QUESTIONS.length * 2;
+    const p2Pct = Math.round((p2TotalScore / p2Max) * 100);
+
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:60}}>
+        <div style={{background:`linear-gradient(135deg,${rc},#0d47a1)`,color:"white",padding:"22px 16px 18px",textAlign:"center"}}>
+          <div style={{fontSize:40,marginBottom:6}}>🎉</div>
+          <h1 style={{fontSize:19,fontWeight:"bold",margin:"0 0 3px 0"}}>チェック完了！ / Complete!</h1>
+          <p style={{fontSize:11,opacity:0.8,margin:0}}>あなたの日本語レベルが判定されました</p>
+        </div>
+
+        <div style={{padding:"18px 14px"}}>
+          <div style={{background:"white",borderRadius:16,padding:"20px",marginBottom:14,boxShadow:"0 4px 14px rgba(0,0,0,0.1)",border:`3px solid ${rc}`,textAlign:"center"}}>
+            <p style={{fontSize:11,color:"#888",margin:"0 0 4px 0"}}>総合判定 / Overall Level</p>
+            <div style={{fontSize:54,fontWeight:"bold",color:rc,margin:"0 0 4px 0"}}>{finalLevel}</div>
+            <p style={{fontSize:13,color:"#555",margin:"0 0 14px 0"}}>{LEVEL_DESC[finalLevel]}</p>
+            <div style={{background:"#f8f9ff",borderRadius:10,padding:"12px 14px",textAlign:"left"}}>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 4px 0",fontWeight:"bold"}}>Pandora課題への推薦 / Recommendation:</p>
+              <p style={{fontSize:13,color:"#333",margin:0}}>{LEVEL_ADVICE[finalLevel]}</p>
+            </div>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{background:"white",borderRadius:14,padding:"14px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",textAlign:"center",border:"2px solid #e8f0fe"}}>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 4px 0"}}>前半 / Part 1</p>
+              <div style={{fontSize:28,fontWeight:"bold",color:LEVEL_COLORS[p1FinalLevel],margin:"0 0 2px 0"}}>{p1FinalLevel}</div>
+              <p style={{fontSize:11,color:"#888",margin:0}}>正解 {p1Correct}/8問</p>
+            </div>
+            <div style={{background:"white",borderRadius:14,padding:"14px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",textAlign:"center",border:"2px solid #fce4ec"}}>
+              <p style={{fontSize:11,color:"#888",margin:"0 0 4px 0"}}>後半 / Part 2</p>
+              <div style={{fontSize:28,fontWeight:"bold",color:"#e65100",margin:"0 0 2px 0"}}>{p2TotalScore}/{p2Max}</div>
+              <p style={{fontSize:11,color:"#888",margin:0}}>読解スコア {p2Pct}%</p>
+            </div>
+          </div>
+
+          <div style={{background:"white",borderRadius:14,padding:"14px",marginBottom:14,boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+            <p style={{fontSize:12,fontWeight:"bold",color:"#333",marginBottom:8}}>前半の結果 / Part 1 Results</p>
+            {p1Results.map((r, i) => (
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid #f0f0f0",gap:8}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <span style={{fontSize:11,color:"#888"}}>Q{i+1}　</span>
+                  <span style={{fontSize:10,background:CAT_COLOR[r.q.cat]+"22",color:CAT_COLOR[r.q.cat],borderRadius:4,padding:"1px 5px"}}>{CAT_LABEL[r.q.cat]}</span>
+                </div>
+                <span style={{background:r.correct?"#e8f5e9":"#ffebee",color:r.correct?"#2e7d32":"#c62828",borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:"bold",flexShrink:0}}>{r.correct?"✓ 正解":"✗ 不正解"}</span>
+                <span style={{background:LEVEL_COLORS[r.level]+"22",color:LEVEL_COLORS[r.level],borderRadius:20,padding:"2px 8px",fontSize:11,flexShrink:0}}>{r.level}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"white",borderRadius:14,padding:"14px",marginBottom:14,boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+            <p style={{fontSize:12,fontWeight:"bold",color:"#333",marginBottom:8}}>後半の結果 / Part 2 Results</p>
+            {p2Results.map((r, i) => {
+              const ansColor = r.val==="easy"?"#2e7d32":r.val==="ok"?"#e65100":"#c62828";
+              const ansBg = r.val==="easy"?"#e8f5e9":r.val==="ok"?"#fff3e0":"#ffebee";
+              const ansLabel = r.val==="easy"?"✓✓ すらすら":r.val==="ok"?"△ なんとか":"✗ むずかしい";
+              return (
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid #f0f0f0",gap:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontSize:11,color:"#888"}}>Q{i+1}　</span>
+                    <span style={{fontSize:10,background:TYPE_BG[r.q.type],color:TYPE_COLOR[r.q.type],borderRadius:4,padding:"1px 5px"}}>{TYPE_LABEL[r.q.type]}</span>
+                  </div>
+                  <span style={{background:ansBg,color:ansColor,borderRadius:20,padding:"2px 8px",fontSize:11,fontWeight:"bold",flexShrink:0}}>{ansLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <button onClick={retry}
+            style={{width:"100%",background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",border:"none",padding:"15px",borderRadius:14,fontSize:15,fontWeight:"bold",cursor:"pointer"}}>
+            もう一度 / Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+</script>
+</body>
+</html>
