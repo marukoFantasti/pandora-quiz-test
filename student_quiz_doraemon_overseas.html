@@ -227,20 +227,30 @@ const illustrations = {
   </svg>,
 };
 
-function DrawCanvas({ id, height=120, label, canvasRef: externalRef }) {
+function DrawCanvas({ id, height=120, label, canvasRef: externalRef, internalHeight=150 }) {
   const internalRef = React.useRef(null);
   const canvasRef = externalRef || internalRef;
   const isDrawing = React.useRef(false);
   const lastPos = React.useRef(null);
   const [hasDrawing, setHasDrawing] = React.useState(false);
+  const [isEraser, setIsEraser] = React.useState(false);
   const getPos=(e,canvas)=>{const rect=canvas.getBoundingClientRect();const sx=canvas.width/rect.width,sy=canvas.height/rect.height;if(e.touches)return{x:(e.touches[0].clientX-rect.left)*sx,y:(e.touches[0].clientY-rect.top)*sy};return{x:(e.clientX-rect.left)*sx,y:(e.clientY-rect.top)*sy};};
-  React.useEffect(()=>{const canvas=canvasRef.current;const ctx=canvas.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle="#1a237e";ctx.lineWidth=3;ctx.lineCap="round";ctx.lineJoin="round";const onTS=(e)=>{e.preventDefault();isDrawing.current=true;lastPos.current=getPos(e,canvas);setHasDrawing(true);};const onTM=(e)=>{e.preventDefault();if(!isDrawing.current)return;const pos=getPos(e,canvas);const c2=canvas.getContext("2d");c2.beginPath();c2.moveTo(lastPos.current.x,lastPos.current.y);c2.lineTo(pos.x,pos.y);c2.stroke();lastPos.current=pos;};const onTE=(e)=>{e.preventDefault();isDrawing.current=false;};canvas.addEventListener("touchstart",onTS,{passive:false});canvas.addEventListener("touchmove",onTM,{passive:false});canvas.addEventListener("touchend",onTE,{passive:false});return()=>{canvas.removeEventListener("touchstart",onTS);canvas.removeEventListener("touchmove",onTM);canvas.removeEventListener("touchend",onTE);};},[]); const sd=(e)=>{isDrawing.current=true;lastPos.current=getPos(e,canvasRef.current);setHasDrawing(true);};const dr=(e)=>{if(!isDrawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const pos=getPos(e,c);ctx.beginPath();ctx.moveTo(lastPos.current.x,lastPos.current.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastPos.current=pos;};const sp=()=>{isDrawing.current=false;};const clear=()=>{const c=canvasRef.current;const ctx=c.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,c.width,c.height);setHasDrawing(false);};
+  React.useEffect(()=>{const canvas=canvasRef.current;const ctx=canvas.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,canvas.width,canvas.height);const onTS=(e)=>{e.preventDefault();isDrawing.current=true;lastPos.current=getPos(e,canvas);setHasDrawing(true);};const onTM=(e)=>{e.preventDefault();if(!isDrawing.current)return;const pos=getPos(e,canvas);const c2=canvas.getContext("2d");if(isEraser.valueOf()||c2._eraser){c2.globalCompositeOperation="destination-out";c2.lineWidth=30;}else{c2.globalCompositeOperation="source-over";c2.strokeStyle="#1a237e";c2.lineWidth=3;}c2.lineCap="round";c2.lineJoin="round";c2.beginPath();c2.moveTo(lastPos.current.x,lastPos.current.y);c2.lineTo(pos.x,pos.y);c2.stroke();lastPos.current=pos;};const onTE=(e)=>{e.preventDefault();isDrawing.current=false;};canvas.addEventListener("touchstart",onTS,{passive:false});canvas.addEventListener("touchmove",onTM,{passive:false});canvas.addEventListener("touchend",onTE,{passive:false});return()=>{canvas.removeEventListener("touchstart",onTS);canvas.removeEventListener("touchmove",onTM);canvas.removeEventListener("touchend",onTE);};},[]); 
+  const eraserRef = React.useRef(false);
+  const sd=(e)=>{isDrawing.current=true;lastPos.current=getPos(e,canvasRef.current);setHasDrawing(true);};
+  const dr=(e)=>{if(!isDrawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const pos=getPos(e,c);if(eraserRef.current){ctx.globalCompositeOperation="destination-out";ctx.lineWidth=30;}else{ctx.globalCompositeOperation="source-over";ctx.strokeStyle="#1a237e";ctx.lineWidth=3;}ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(lastPos.current.x,lastPos.current.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastPos.current=pos;};
+  const sp=()=>{isDrawing.current=false;};
+  const clear=()=>{const c=canvasRef.current;const ctx=c.getContext("2d");ctx.globalCompositeOperation="source-over";ctx.fillStyle="#fffde7";ctx.fillRect(0,0,c.width,c.height);setHasDrawing(false);};
+  const toggleEraser=()=>{eraserRef.current=!eraserRef.current;setIsEraser(eraserRef.current);};
   return (
     <div style={{marginTop:10}}>
       {label&&<p style={{fontSize:12,color:"#5c6bc0",fontWeight:"bold",margin:"0 0 5px 0"}}>{label}</p>}
       <canvas ref={canvasRef} width={1200} height={300} onMouseDown={sd} onMouseMove={dr} onMouseUp={sp} onMouseLeave={sp}
-        style={{width:"100%",height:150,border:"2px dashed #9fa8da",borderRadius:10,background:"#fffde7",display:"block",touchAction:"none",cursor:"crosshair"}}/>
-      {hasDrawing&&<button onClick={clear} style={{marginTop:4,background:"#f5f5f5",border:"1px solid #ddd",color:"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>🗑️ Clear</button>}
+        style={{width:"100%",height:internalHeight,border:isEraser?"2px dashed #e74c3c":"2px dashed #9fa8da",borderRadius:10,background:"#fffde7",display:"block",touchAction:"none",cursor:isEraser?"cell":"crosshair"}}/>
+      <div style={{display:"flex",gap:6,marginTop:4}}>
+        <button onClick={toggleEraser} style={{background:isEraser?"#ffeaa7":"#f5f5f5",border:isEraser?"1px solid #e74c3c":"1px solid #ddd",color:isEraser?"#e74c3c":"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>{isEraser?"✏️ ペン":"🧹 消しゴム"}</button>
+        {hasDrawing&&<button onClick={clear} style={{background:"#f5f5f5",border:"1px solid #ddd",color:"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>🗑️ 全消し</button>}
+      </div>
     </div>
   );
 }
@@ -518,7 +528,7 @@ function App() {
                   {speaking===q.reading?"🔊 Playing...":"🔊 読んでみよう / Read aloud"}
                 </button>
 
-                <DrawCanvas id={`eq_${q.id}`} height={150} label="📐 式を書こう / Write your equation" canvasRef={eqRefs.current[q.id]}/>
+                <DrawCanvas id={`eq_${q.id}`} height={225} internalHeight={225} label="📐 式を書こう / Write your equation" canvasRef={eqRefs.current[q.id]}/>
                 <DrawCanvas id={`ans_${q.id}`} height={110} label="✍️ 答えを書こう / Write your answer" canvasRef={ansRefs.current[q.id]}/>
 
                 <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
