@@ -484,6 +484,7 @@ function App() {
           </div>
           {vocabQuiz.map((v,i)=>{
             const answered=quizAnswers[v.id];
+            const isCorrect=answered===v.correct;
             return (
               <div key={v.id} style={{padding:"8px 4px",borderBottom:i<vocabQuiz.length-1?"1px solid #f3e5f5":"none"}}>
                 <p style={{fontSize:13,fontWeight:"bold",color:"#4a148c",margin:"0 0 6px 0"}}>{v.meaning}</p>
@@ -502,6 +503,7 @@ function App() {
                     </button>;
                   })}
                 </div>
+                {answered&&<p style={{fontSize:12,fontWeight:"bold",color:isCorrect?"#43a047":"#e53935",margin:"6px 0 0 0"}}>{isCorrect?"✓ 正解！":`✗ 不正解（正解: ${v.correct}）`}</p>}
               </div>
             );
           })}
