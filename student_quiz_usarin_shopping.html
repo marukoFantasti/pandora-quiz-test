@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>算数×英語を学ぼう！🐰うさりんのおつかい編</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; }
+    ruby { ruby-align: center; }
+    rt { font-size: 10px; color: #888; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const QUIZ_META = {
+  assignment_id: "asgn_1782971673337_e180t8",
+  mode: "domestic",
+  grades: ["g03"],
+  theme_title: "算数×英語を学ぼう！うさりん編",
+  theme_label: "うさりんのおつかい",
+  theme_icon: "🐰",
+  grade_label: "小3",
+  student_name: "阿部 優子"
+};
+
+const LEVEL_BADGE = {
+  example_follow: { label:"例題", color:"#7b1fa2", bg:"#f3e5f5" },
+  confirmation:   { label:"確認", color:"#1a9fd4", bg:"#e1f5fe" },
+  practice:       { label:"練習", color:"#e65100", bg:"#fff3e0" },
+};
+const UNIT_COLORS = {
+  "整数のわり算": { color:"#1a73e8", bg:"#e8f0fe" },
+  "式と計算":     { color:"#2e7d32", bg:"#e8f5e9" },
+};
+
+// カタカナ読みのアクセント表記（"サ*ンド*イッチ" の * で挟まれた部分を強調）
+function renderAccent(katakana){
+  if(!katakana) return null;
+  const parts = katakana.split("*");
+  if(parts.length < 3) return katakana;
+  return <>{parts[0]}<strong style={{color:"#e65100",textDecoration:"underline"}}>{parts[1]}</strong>{parts.slice(2).join("")}</>;
+}
+
+const questions = [
+  { id:1, problem_id:"asgn_1782971673337_e180t8_q1", tags:[], unit:"かけ算のきまり", chapter:"かけ算のきまり", level:"example_follow",
+    question:"うさりんは、にんじんを□本ずつ3わにあげます。にんじんの答えが0になる場合、□にあてはまる数をかきなさい。(1)～(4)全ての場合をかきなさい。",
+    jp: <span>うさりんは、にんじんを□本ずつ3わにあげます。にんじんの答えが0になる場合、□に<ruby>当<rt>あ</rt></ruby>てはまる数をかきなさい。(1)～(4)全ての場合をかきなさい。</span>,
+    reading:"うさりんは、にんじんをほんずつさんわにあげます。にんじんのこたえがぜろになるばあい、あてはまるすうをかきなさい。",
+    answer:"(1)0 (2)0 (3)0 (4)0",
+    vocab_word:"carrot", vocab_katakana:"*キャ*ロット", vocab_meaning:"にんじん",
+    example_en:"Usarin has a carrot.", example_jp:"うさりんはにんじんを持っています。" },
+
+  { id:2, problem_id:"asgn_1782971673337_e180t8_q2", tags:[], unit:"かけ算のきまり", chapter:"かけ算のきまり", level:"confirmation",
+    question:"うさりんの友達が、クッキーを10個ずつ用意しました。次の計算をしなさい。(1) 3×10 (2) 5×10 (3) 4×10 (4) 8×10",
+    jp: <span>うさりんの<ruby>友達<rt>ともだち</rt></ruby>が、クッキーを10個ずつ<ruby>用意<rt>ようい</rt></ruby>しました。次の計算をしなさい。<br/>(1) 3×10 (2) 5×10 (3) 4×10 (4) 8×10</span>,
+    reading:"うさりんのともだちが、くっきーをじゅっこずつようういしました。つぎのけいさんをしなさい。",
+    answer:"(1)30 (2)50 (3)40 (4)80",
+    vocab_word:"cookie", vocab_katakana:"*クッ*キー", vocab_meaning:"クッキー",
+    example_en:"I like this cookie.", example_jp:"わたしはこのクッキーが好きです。" },
+
+  { id:3, problem_id:"asgn_1782971673337_e180t8_q3", tags:[], unit:"かけ算のきまり", chapter:"かけ算のきまり", level:"confirmation",
+    question:"うさりんが、野菜のセットを作っています。次の□にあてはまる数をかきなさい。(1) 6×4=□、6×5=□ (2) 7×4=□、7×5=□ (3) 8×4=□、8×5=□ (4) 9×4=□、9×5=□",
+    jp: <span>うさりんが、<ruby>野菜<rt>やさい</rt></ruby>のセットを作っています。次の□に当てはまる数をかきなさい。<br/>(1) 6×4=□、6×5=□ (2) 7×4=□、7×5=□ (3) 8×4=□、8×5=□ (4) 9×4=□、9×5=□</span>,
+    reading:"うさりんが、やさいのせっとをつくっています。つぎのあてはまるすうをかきなさい。",
+    answer:"(1)24, 30 (2)28, 35 (3)32, 40 (4)36, 45",
+    vocab_word:"vegetable", vocab_katakana:"*ベジ*タブル", vocab_meaning:"野菜",
+    example_en:"This vegetable is fresh.", example_jp:"この野菜は新鮮です。" },
+
+  { id:4, problem_id:"asgn_1782971673337_e180t8_q4", tags:[], unit:"かけ算のきまり", chapter:"かけ算のきまり", level:"confirmation",
+    question:"うさりんとお友達で、りんごを配っています。次の□にあてはまる数をかきなさい。(1) 5×3=□、5×4=□ (2) 6×3=□、6×4=□ (3) 7×3=□、7×4=□",
+    jp: <span>うさりんとお友達で、りんごを<ruby>配<rt>くば</rt></ruby>っています。次の□に当てはまる数をかきなさい。<br/>(1) 5×3=□、5×4=□ (2) 6×3=□、6×4=□ (3) 7×3=□、7×4=□</span>,
+    reading:"うさりんとおともだちで、りんごをくばっています。つぎのあてはまるすうをかきなさい。",
+    answer:"(1)15, 20 (2)18, 24 (3)21, 28",
+    vocab_word:"apple", vocab_katakana:"*アッ*プル", vocab_meaning:"りんご",
+    example_en:"The apple is red.", example_jp:"りんごは赤いです。" },
+
+  { id:5, problem_id:"asgn_1782971673337_e180t8_q5", tags:[], unit:"かけ算のきまり", chapter:"かけ算のきまり", level:"practice",
+    question:"うさりんが、お花を3本ずつ8人のお友達に配るのに必要なお花の数をもとめなさい。しかし、4本足りなかったので、はじめにあったお花の数をもとめなさい。",
+    jp: <span>うさりんが、お花を3本ずつ8人のお友達に配るのに<ruby>必要<rt>ひつよう</rt></ruby>なお花の数をもとめなさい。しかし、4本足りなかったので、はじめにあったお花の数をもとめなさい。</span>,
+    reading:"うさりんが、おはなをさんぼんずつはちにんのおともだちにくばるのにひつようなおはなのかずをもとめなさい。しかし、よんほんたりなかったので、はじめにあったおはなのかずをもとめなさい。",
+    answer:"式 3×8=24  24-4=20  答え 20本",
+    vocab_word:"flower", vocab_katakana:"*フラ*ワー", vocab_meaning:"お花",
+    example_en:"She has a pretty flower.", example_jp:"彼女はきれいなお花を持っています。" },
+
+  { id:6, problem_id:"asgn_1782971673337_e180t8_q6", tags:[], unit:"かけ算の応用", chapter:"かけ算の応用", level:"example_follow",
+    question:"うさりんのお庭に、お花が5本のたばが3たばあります。お花は全部で何本ありますか。",
+    jp: <span>うさりんのお<ruby>庭<rt>にわ</rt></ruby>に、お花が5本のたばが3たばあります。お花は<ruby>全部<rt>ぜんぶ</rt></ruby>で何本ありますか。</span>,
+    reading:"うさりんのおにわに、おはながごほんのたばがさんたばあります。おはなはぜんぶでなんぼんありますか。",
+    answer:"式 5×3=15  答え 15本",
+    vocab_word:"bundle", vocab_katakana:"*バン*ドル", vocab_meaning:"たば",
+    example_en:"He carries a bundle of flowers.", example_jp:"彼はお花のたばを運びます。" },
+
+  { id:7, problem_id:"asgn_1782971673337_e180t8_q7", tags:[], unit:"かけ算の応用", chapter:"かけ算の応用", level:"confirmation",
+    question:"うさりんのお店で、にんじんが3本ずつのセットが7セットあります。にんじんは全部で何本ですか。",
+    jp: <span>うさりんのお店で、にんじんが3本ずつのセットが7セットあります。にんじんは全部で何本ですか。</span>,
+    reading:"うさりんのおみせで、にんじんがさんぼんずつのせっとがななせっとあります。にんじんはぜんぶでなんぼんですか。",
+    answer:"式 3×7=21  答え 21本",
+    vocab_word:"shop", vocab_katakana:"*ショッ*プ", vocab_meaning:"お店",
+    example_en:"We go to the shop.", example_jp:"わたしたちはお店に行きます。" },
+
+  { id:8, problem_id:"asgn_1782971673337_e180t8_q8", tags:[], unit:"かけ算の応用", chapter:"かけ算の応用", level:"confirmation",
+    question:"うさりんが、クッキーを4個ずつ9箱に詰めるのに必要なクッキーの数をもとめなさい。ただし、5個足りなかったので、はじめにあったクッキーの数をもとめなさい。",
+    jp: <span>うさりんが、クッキーを4個ずつ9<ruby>箱<rt>はこ</rt></ruby>に<ruby>詰<rt>つ</rt></ruby>めるのに必要なクッキーの数をもとめなさい。ただし、5個足りなかったので、はじめにあったクッキーの数をもとめなさい。</span>,
+    reading:"うさりんが、くっきーをよんこずつきゅうはこにつめるのにひつようなくっきーのかずをもとめなさい。ただし、ごこたりなかったので、はじめにあったくっきーのかずをもとめなさい。",
+    answer:"式 4×9=36  36-5=31  答え 31個",
+    vocab_word:"pack", vocab_katakana:"*パッ*ク", vocab_meaning:"詰める",
+    example_en:"Please pack the box.", example_jp:"箱に詰めてください。" },
+
+  { id:9, problem_id:"asgn_1782971673337_e180t8_q9", tags:[], unit:"かけ算の応用", chapter:"かけ算の応用", level:"confirmation",
+    question:"うさりんの友達が、お菓子を6個ずつ5袋用意しました。お菓子は全部で何個ですか。",
+    jp: <span>うさりんの友達が、お<ruby>菓子<rt>かし</rt></ruby>を6個ずつ5<ruby>袋<rt>ふくろ</rt></ruby>用意しました。お菓子は全部で何個ですか。</span>,
+    reading:"うさりんのともだちが、おかしをろっこずつごふくろようういしました。おかしはぜんぶでなんこですか。",
+    answer:"式 6×5=30  答え 30個",
+    vocab_word:"bag", vocab_katakana:"*バッ*グ", vocab_meaning:"ふくろ",
+    example_en:"Put it in the bag.", example_jp:"それを袋に入れてください。" },
+
+  { id:10, problem_id:"asgn_1782971673337_e180t8_q10", tags:[], unit:"かけ算の応用", chapter:"かけ算の応用", level:"practice",
+    question:"うさりんが、えん筆を2本ずつ7人に配るのに必要なえん筆の数をもとめなさい。しかし、3本足りなかったので、はじめにあったえん筆の数をもとめなさい。",
+    jp: <span>うさりんが、えん<ruby>筆<rt>ぴつ</rt></ruby>を2本ずつ7人に配るのに必要なえん筆の数をもとめなさい。しかし、3本足りなかったので、はじめにあったえん筆の数をもとめなさい。</span>,
+    reading:"うさりんが、えんぴつをにほんずつななにんにくばるのにひつようなえんぴつのかずをもとめなさい。しかし、さんぼんたりなかったので、はじめにあったえんぴつのかずをもとめなさい。",
+    answer:"式 2×7=14  14-3=11  答え 11本",
+    vocab_word:"pencil", vocab_katakana:"*ペン*シル", vocab_meaning:"えんぴつ",
+    example_en:"I write with a pencil.", example_jp:"わたしはえん筆で書きます。" },
+];
+
+// SVGイラスト（オリジナルキャラ：うさぎのうさりん）
+const illustrations = {
+  1: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <ellipse cx="30" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="38" cy="40" r="19" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="32" cy="37" r="2.2" fill="#3a2a2a"/><circle cx="44" cy="37" r="2.2" fill="#3a2a2a"/>
+    <ellipse cx="38" cy="43" rx="2.5" ry="1.8" fill="#f4a6c6"/>
+    <path d="M55 55 L60 66 L52 66 Z" fill="#ff8f4d"/><rect x="53" y="66" width="8" height="4" fill="#4caf50"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">にんじん</text>
+  </svg>),
+  2: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <ellipse cx="30" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="38" cy="38" r="18" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="32" cy="35" r="2" fill="#3a2a2a"/><circle cx="44" cy="35" r="2" fill="#3a2a2a"/>
+    <circle cx="40" cy="60" r="12" fill="#e8c496"/>
+    <circle cx="36" cy="57" r="1.5" fill="#a9713a"/><circle cx="44" cy="62" r="1.5" fill="#a9713a"/><circle cx="38" cy="65" r="1.5" fill="#a9713a"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">クッキー</text>
+  </svg>),
+  3: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <circle cx="40" cy="30" r="16" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="32" cy="16" rx="5" ry="11" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="48" cy="16" rx="5" ry="11" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="35" cy="28" r="1.8" fill="#3a2a2a"/><circle cx="45" cy="28" r="1.8" fill="#3a2a2a"/>
+    <rect x="20" y="54" width="40" height="18" rx="4" fill="#ffe0ec"/>
+    <path d="M28 60 L32 70 L24 70 Z" fill="#ff8f4d"/>
+    <circle cx="40" cy="65" r="5" fill="#4caf50"/>
+    <path d="M52 60 L56 70 L48 70 Z" fill="#e64a19"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">野菜セット</text>
+  </svg>),
+  4: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <ellipse cx="30" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="38" cy="38" r="18" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="32" cy="35" r="2" fill="#3a2a2a"/><circle cx="44" cy="35" r="2" fill="#3a2a2a"/>
+    <circle cx="30" cy="60" r="8" fill="#e53935"/><circle cx="48" cy="62" r="8" fill="#e53935"/>
+    <rect x="29" y="50" width="2" height="6" fill="#4caf50"/><rect x="47" y="52" width="2" height="6" fill="#4caf50"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">りんご</text>
+  </svg>),
+  5: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <circle cx="38" cy="30" r="16" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="30" cy="16" rx="5" ry="11" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="16" rx="5" ry="11" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="33" cy="28" r="1.8" fill="#3a2a2a"/><circle cx="43" cy="28" r="1.8" fill="#3a2a2a"/>
+    <circle cx="20" cy="58" r="7" fill="#ffb3cd"/><circle cx="20" cy="58" r="3" fill="#fff3b0"/>
+    <circle cx="40" cy="64" r="7" fill="#c9a6ff"/><circle cx="40" cy="64" r="3" fill="#fff3b0"/>
+    <circle cx="58" cy="56" r="7" fill="#ffd68a"/><circle cx="58" cy="56" r="3" fill="#fff3b0"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">お花くばり</text>
+  </svg>),
+  6: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <circle cx="40" cy="26" r="15" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="32" cy="13" rx="5" ry="10" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="48" cy="13" rx="5" ry="10" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="35" cy="24" r="1.6" fill="#3a2a2a"/><circle cx="45" cy="24" r="1.6" fill="#3a2a2a"/>
+    <rect x="36" y="46" width="8" height="26" fill="#8fcf7a"/>
+    <circle cx="30" cy="52" r="6" fill="#ffb3cd"/><circle cx="40" cy="48" r="6" fill="#c9a6ff"/><circle cx="50" cy="52" r="6" fill="#ffd68a"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">お花のたば</text>
+  </svg>),
+  7: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <rect x="14" y="30" width="52" height="34" rx="4" fill="#ffe0ec" stroke="#f4a6c6" strokeWidth="2"/>
+    <path d="M14 30 L40 12 L66 30 Z" fill="#ff8fb3"/>
+    <rect x="30" y="44" width="20" height="20" fill="#fff"/>
+    <circle cx="40" cy="24" r="10" fill="#fff" stroke="#f4a6c6" strokeWidth="1.5"/>
+    <circle cx="37" cy="23" r="1.2" fill="#3a2a2a"/><circle cx="43" cy="23" r="1.2" fill="#3a2a2a"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">うさりんのお店</text>
+  </svg>),
+  8: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <circle cx="40" cy="26" r="15" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="32" cy="13" rx="5" ry="10" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="48" cy="13" rx="5" ry="10" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="35" cy="24" r="1.6" fill="#3a2a2a"/><circle cx="45" cy="24" r="1.6" fill="#3a2a2a"/>
+    <rect x="22" y="48" width="36" height="22" rx="3" fill="#e8c496" stroke="#b8875a" strokeWidth="1.5"/>
+    <circle cx="32" cy="58" r="3" fill="#a9713a"/><circle cx="42" cy="60" r="3" fill="#a9713a"/><circle cx="48" cy="56" r="3" fill="#a9713a"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">クッキー詰め</text>
+  </svg>),
+  9: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <ellipse cx="30" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="38" cy="38" r="18" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="32" cy="35" r="2" fill="#3a2a2a"/><circle cx="44" cy="35" r="2" fill="#3a2a2a"/>
+    <path d="M28 56 Q28 50 38 50 Q48 50 48 56 L48 68 Q38 72 28 68 Z" fill="#a9d1f7"/>
+    <rect x="30" y="52" width="16" height="4" fill="#7ab6ef"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">おかしぶくろ</text>
+  </svg>),
+  10: (<svg viewBox="0 0 80 80" width="72" height="72">
+    <ellipse cx="30" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <ellipse cx="46" cy="18" rx="6" ry="14" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="38" cy="38" r="18" fill="#fff" stroke="#f4a6c6" strokeWidth="2"/>
+    <circle cx="32" cy="35" r="2" fill="#3a2a2a"/><circle cx="44" cy="35" r="2" fill="#3a2a2a"/>
+    <rect x="34" y="55" width="6" height="18" fill="#ffd68a" transform="rotate(20 37 64)"/>
+    <path d="M34 55 L40 55 L37 48 Z" fill="#8a6a3a" transform="rotate(20 37 64)"/>
+    <text x="40" y="79" textAnchor="middle" fontSize="7" fill="#e0729a" fontWeight="bold">えんぴつ</text>
+  </svg>),
+};
+
+// カタカナ読みのアクセント表記（"サ*ンド*イッチ" の * で挟まれた部分を強調）
+function renderAccent(katakana){
+  if(!katakana) return null;
+  const parts = katakana.split("*");
+  if(parts.length < 3) return katakana;
+  return <>{parts[0]}<strong style={{color:"#e65100",textDecoration:"underline"}}>{parts[1]}</strong>{parts.slice(2).join("")}</>;
+}
+
+function DrawCanvas({ id, height=120, label, canvasRef: externalRef, internalHeight=150 }) {
+  const internalRef = React.useRef(null);
+  const canvasRef = externalRef || internalRef;
+  const isDrawing = React.useRef(false);
+  const lastPos = React.useRef(null);
+  const [hasDrawing, setHasDrawing] = React.useState(false);
+  const [isEraser, setIsEraser] = React.useState(false);
+  const getPos=(e,canvas)=>{const rect=canvas.getBoundingClientRect();const sx=canvas.width/rect.width,sy=canvas.height/rect.height;if(e.touches)return{x:(e.touches[0].clientX-rect.left)*sx,y:(e.touches[0].clientY-rect.top)*sy};return{x:(e.clientX-rect.left)*sx,y:(e.clientY-rect.top)*sy};};
+  React.useEffect(()=>{const canvas=canvasRef.current;const ctx=canvas.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,canvas.width,canvas.height);const onTS=(e)=>{e.preventDefault();isDrawing.current=true;lastPos.current=getPos(e,canvas);setHasDrawing(true);};const onTM=(e)=>{e.preventDefault();if(!isDrawing.current)return;const pos=getPos(e,canvas);const c2=canvas.getContext("2d");if(eraserRef.current){c2.globalCompositeOperation="destination-out";c2.lineWidth=30;}else{c2.globalCompositeOperation="source-over";c2.strokeStyle="#1a237e";c2.lineWidth=3;}c2.lineCap="round";c2.lineJoin="round";c2.beginPath();c2.moveTo(lastPos.current.x,lastPos.current.y);c2.lineTo(pos.x,pos.y);c2.stroke();lastPos.current=pos;};const onTE=(e)=>{e.preventDefault();isDrawing.current=false;};canvas.addEventListener("touchstart",onTS,{passive:false});canvas.addEventListener("touchmove",onTM,{passive:false});canvas.addEventListener("touchend",onTE,{passive:false});return()=>{canvas.removeEventListener("touchstart",onTS);canvas.removeEventListener("touchmove",onTM);canvas.removeEventListener("touchend",onTE);};},[]); 
+  const eraserRef = React.useRef(false);
+  const sd=(e)=>{isDrawing.current=true;lastPos.current=getPos(e,canvasRef.current);setHasDrawing(true);};
+  const dr=(e)=>{if(!isDrawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const pos=getPos(e,c);if(eraserRef.current){ctx.globalCompositeOperation="destination-out";ctx.lineWidth=30;}else{ctx.globalCompositeOperation="source-over";ctx.strokeStyle="#1a237e";ctx.lineWidth=3;}ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(lastPos.current.x,lastPos.current.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastPos.current=pos;};
+  const sp=()=>{isDrawing.current=false;};
+  const clear=()=>{const c=canvasRef.current;const ctx=c.getContext("2d");ctx.globalCompositeOperation="source-over";ctx.fillStyle="#fffde7";ctx.fillRect(0,0,c.width,c.height);setHasDrawing(false);};
+  const toggleEraser=()=>{eraserRef.current=!eraserRef.current;setIsEraser(eraserRef.current);};
+  return (
+    <div style={{marginTop:10}}>
+      {label&&<p style={{fontSize:12,color:"#5c6bc0",fontWeight:"bold",margin:"0 0 5px 0"}}>{label}</p>}
+      <canvas ref={canvasRef} width={1200} height={300} onMouseDown={sd} onMouseMove={dr} onMouseUp={sp} onMouseLeave={sp}
+        style={{width:"100%",height:internalHeight,border:isEraser?"2px dashed #e74c3c":"2px dashed #9fa8da",borderRadius:10,background:"#fffde7",display:"block",touchAction:isEraser?"none":"pan-y",cursor:isEraser?"cell":"crosshair"}}/>
+      <div style={{display:"flex",gap:6,marginTop:4}}>
+        <button onClick={toggleEraser} style={{background:isEraser?"#ffeaa7":"#f5f5f5",border:isEraser?"1px solid #e74c3c":"1px solid #ddd",color:isEraser?"#e74c3c":"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>{isEraser?"✏️ ペン":"🧹 消しゴム"}</button>
+        {hasDrawing&&<button onClick={clear} style={{background:"#f5f5f5",border:"1px solid #ddd",color:"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>🗑️ 全消し</button>}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [showEnglish, setShowEnglish] = React.useState({});
+  const [quizAnswers, setQuizAnswers] = React.useState({});
+  const [speaking, setSpeaking] = React.useState(null);
+  const [submitted, setSubmitted] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState(null);
+
+  const nameCanvasRef = React.useRef(null);
+  const eqRefs = React.useRef({});
+  const ansRefs = React.useRef({});
+  questions.forEach(q=>{
+    if(!eqRefs.current[q.id]) eqRefs.current[q.id]=React.createRef();
+    if(!ansRefs.current[q.id]) ansRefs.current[q.id]=React.createRef();
+  });
+
+
+  const speak=(text,lang="ja-JP")=>{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang;
+    u.rate=0.8;
+    if(lang.startsWith("en")){
+      const FEMALE_HINTS=["Samantha","Female","Google US English","Victoria","Karen","Moira","Tessa","Fiona","Zira","Susan","Allison","Ava"];
+      const voices=window.speechSynthesis.getVoices()||[];
+      const enVoices=voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith("en")&&v.name!=="Kyoko");
+      const femaleVoice=enVoices.find(v=>FEMALE_HINTS.some(h=>v.name.includes(h)))
+        || enVoices.find(v=>/female/i.test(v.name));
+      if(femaleVoice) u.voice=femaleVoice; // 見つからなければブラウザのデフォルト音声にフォールバック
+    }
+    setSpeaking(text);
+    u.onend=()=>setSpeaking(null);
+    window.speechSynthesis.speak(u);
+  };
+
+  // 単語クイズ用データ（questionsの vocab_word/vocab_meaning から自動生成、3択）
+  const vocabQuiz = React.useMemo(()=>{
+    const withVocab = questions.filter(q=>q.vocab_word&&q.vocab_meaning);
+    return withVocab.map(q=>{
+      const distractors = withVocab
+        .filter(o=>o.id!==q.id && o.vocab_word!==q.vocab_word)
+        .map(o=>o.vocab_word)
+        .sort(()=>Math.random()-0.5)
+        .slice(0,2);
+      const choices = [...distractors, q.vocab_word].sort(()=>Math.random()-0.5);
+      return { id:q.id, meaning:q.vocab_meaning, correct:q.vocab_word, choices };
+    });
+  },[]);
+  const handleQuizAnswer=(id,choice)=>{
+    if(quizAnswers[id])return;
+    setQuizAnswers(prev=>({...prev,[id]:choice}));
+  };
+  const quizCorrectCount = vocabQuiz.filter(v=>quizAnswers[v.id]===v.correct).length;
+
+  const SUPABASE_URL="https://upmflhdbhbyzoeldrvvw.supabase.co";
+  const SUPABASE_KEY="sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+  const ASSIGNMENT_ID=typeof QUIZ_META!=="undefined"?QUIZ_META.assignment_id:null;
+  const QUIZ_MODE=typeof QUIZ_META!=="undefined"?QUIZ_META.mode:"domestic";
+  const QUIZ_GRADE=typeof QUIZ_META!=="undefined"?(QUIZ_META.grades||[])[0]:null;
+  const STUDENT_ID=new URLSearchParams(location.search).get('sid')||null;
+  const STUDENT_NAME=typeof QUIZ_META!=="undefined"?(QUIZ_META.student_name||null):null;
+
+  const handleSubmit=async()=>{
+    setSubmitting(true);setSubmitError(null);
+    try{
+      const payload={
+        assignment_id:ASSIGNMENT_ID,
+        student_id:STUDENT_ID,
+        student_name:STUDENT_NAME,
+        grade:QUIZ_GRADE?parseInt(QUIZ_GRADE.replace(/[^0-9]/g,'')):null,
+        subject:"math",
+        mode:QUIZ_MODE,
+        week:1,
+        submission_data:{
+          student_id:STUDENT_ID,
+          student_name:STUDENT_NAME,
+          name_canvas:nameCanvasRef.current?.toDataURL()||null,
+          problems:questions.map(q=>({
+            problem_id:q.problem_id||null,
+            id:q.id,
+            unit:q.unit,
+            chapter:q.chapter,
+            level:q.level,
+            tags:q.tags||[],
+            question:q.question||null,
+            answer:q.answer||null,
+            equation_canvas:eqRefs.current[q.id]?.current?.toDataURL()||null,
+            answer_canvas:ansRefs.current[q.id]?.current?.toDataURL()||null,
+          })),
+          kanji:[],
+          vocab_score:quizCorrectCount,
+          vocab_total:vocabQuiz.length,
+          english_opened_count:Object.keys(showEnglish).filter(k=>showEnglish[k]).length,
+        },
+        submitted_at:new Date().toISOString(),
+      };
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/submissions`,{method:"POST",
+        headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Prefer":"return=minimal"},
+        body:JSON.stringify(payload)});
+      if(!res.ok)throw new Error(`Error: ${res.status}`);
+      setSubmitted(true);window.scrollTo({top:0,behavior:"smooth"});
+    }catch(e){setSubmitError(e.message);}finally{setSubmitting(false);}
+  };
+
+  if(submitted){
+    return (
+      <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:40}}>
+        <div style={{background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",padding:"20px 16px"}}>
+          <h1 style={{fontSize:18,fontWeight:"bold",margin:"0 0 4px 0"}}>✅ 提出完了！ / Submitted!</h1>
+          <p style={{fontSize:12,margin:0,opacity:0.85}}>先生に届いたよ！Well done! 🎉</p>
+        </div>
+        <div style={{padding:"14px 12px"}}>
+          {questions.map((q,idx)=>{
+            const lb=LEVEL_BADGE[q.level]||{};const uc=UNIT_COLORS[q.unit]||{color:"#555",bg:"#f5f5f5"};
+            return (
+              <div key={q.id} style={{background:"white",borderRadius:14,marginBottom:10,padding:"12px",border:"2px solid #dde3f0",boxShadow:"0 2px 6px rgba(0,0,0,0.06)"}}>
+                <div style={{display:"flex",gap:5,marginBottom:6,flexWrap:"wrap"}}>
+                  <span style={{background:"#1a9fd4",color:"white",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                  <span style={{background:uc.bg,color:uc.color,borderRadius:6,padding:"2px 8px",fontSize:11}}>{q.unit}</span>
+                  <span style={{background:lb.bg,color:lb.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{lb.label}</span>
+                </div>
+                {eqRefs.current[q.id]?.current&&<img src={eqRefs.current[q.id].current.toDataURL()} style={{width:"100%",borderRadius:8,border:"1px solid #ddd",marginBottom:4}}/>}
+                {ansRefs.current[q.id]?.current&&<img src={ansRefs.current[q.id].current.toDataURL()} style={{width:"100%",borderRadius:8,border:"1px solid #ddd"}}/>}
+              </div>
+            );
+          })}
+          <button onClick={()=>setSubmitted(false)} style={{width:"100%",background:"#f5f5f5",border:"2px solid #ddd",color:"#666",padding:"13px",borderRadius:14,fontSize:14,cursor:"pointer",fontWeight:"bold"}}>← 戻る / Go back</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:100,overflowX:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",padding:"16px 16px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 10px rgba(0,0,0,0.2)"}}>
+        <h1 style={{fontSize:16,fontWeight:"bold",margin:"0 0 3px 0"}}>{QUIZ_META.theme_icon||"📘"} {QUIZ_META.theme_title||"算数で日本語を学ぼう！"}</h1>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {QUIZ_META.theme_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.theme_label}</span>}
+          {QUIZ_META.grade_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.grade_label}</span>}
+          <span style={{background:"rgba(255,255,255,0.15)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{questions.length}問</span>
+        </div>
+      </div>
+
+      <div style={{padding:"12px"}}>
+        <div style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #1a9fd4",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+          <div style={{padding:"12px"}}>
+            <p style={{fontSize:14,fontWeight:"bold",color:"#1a9fd4",margin:"0 0 2px 0"}}>✏️ なまえ / Your name</p>
+            <DrawCanvas id="name" height={70} label={null} canvasRef={nameCanvasRef}/>
+          </div>
+        </div>
+
+        {questions.map((q,idx)=>{
+          const lb=LEVEL_BADGE[q.level]||{label:q.level,color:"#888",bg:"#f5f5f5"};
+          const uc=UNIT_COLORS[q.unit]||{color:"#555",bg:"#f5f5f5"};
+          return (
+            <div key={q.id} id={'q-'+q.id} style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #dde3f0",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+              <div style={{background:"linear-gradient(90deg,#1a9fd4,#0277bd)",padding:"8px 14px",display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                <span style={{background:"white",color:"#0277bd",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                <span style={{background:uc.bg,color:uc.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{q.unit}</span>
+                <span style={{background:lb.bg,color:lb.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{lb.label}</span>
+              </div>
+
+              <div style={{padding:"14px 12px"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                  <div style={{flexShrink:0}}>{illustrations[q.id]}</div>
+                  <p style={{fontSize:15,lineHeight:2.1,color:"#1a1a1a",fontWeight:"500",margin:0,wordBreak:"break-word"}}>{q.jp}</p>
+                </div>
+
+                <button onClick={()=>speak(q.reading)}
+                  style={{background:speaking===q.reading?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.reading?"#1a9fd4":"#ddd"}`,color:speaking===q.reading?"#1a9fd4":"#666",padding:"5px 12px",borderRadius:8,fontSize:12,cursor:"pointer",marginBottom:12}}>
+                  {speaking===q.reading?"🔊 Playing...":"🔊 読んでみよう / Read aloud"}
+                </button>
+
+                <DrawCanvas id={`eq_${q.id}`} height={225} internalHeight={225} label="📐 式を書こう / Write your equation" canvasRef={eqRefs.current[q.id]}/>
+                <DrawCanvas id={`ans_${q.id}`} height={110} label="✍️ 答えを書こう / Write your answer" canvasRef={ansRefs.current[q.id]}/>
+
+                <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
+                  <button onClick={()=>setShowEnglish(p=>({...p,[q.id]:!p[q.id]}))}
+                    style={{background:showEnglish[q.id]?"#e8f5e9":"#f5f5f5",border:`1px solid ${showEnglish[q.id]?"#43a047":"#ddd"}`,color:showEnglish[q.id]?"#2e7d32":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                    🌍 +English
+                  </button>
+                  <button onClick={()=>{
+                    if(idx < questions.length-1){
+                      const next=document.getElementById('q-'+questions[idx+1].id);
+                      if(next) next.scrollIntoView({behavior:'smooth',block:'start'});
+                    } else {
+                      const quizEl=document.getElementById('vocab-quiz-section');
+                      if(quizEl) quizEl.scrollIntoView({behavior:'smooth',block:'start'});
+                    }
+                  }} style={{marginLeft:"auto",background:idx < questions.length-1?"#1a9fd4":"#e53935",color:"white",border:"none",padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:"bold",cursor:"pointer",boxShadow:"0 2px 6px rgba(0,0,0,0.2)"}}>
+                    {idx < questions.length-1 ? "次の問題へ ▼" : "単語クイズへ ▼"}
+                  </button>
+                </div>
+              </div>
+
+              {showEnglish[q.id]&&(
+                <div style={{borderTop:"1px solid #e8f5e9",background:"#f1f8f1",padding:"12px"}}>
+                  <p style={{fontSize:11,color:"#2e7d32",fontWeight:"bold",margin:"0 0 8px 0"}}>📖 今日の単語</p>
+                  <div style={{background:"white",border:"1px solid #c8e6c9",borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                    <p style={{fontSize:20,fontWeight:"bold",color:"#333",margin:"0 0 2px 0"}}>{q.vocab_word}</p>
+                    <p style={{fontSize:14,color:"#555",margin:"0 0 4px 0"}}>{renderAccent(q.vocab_katakana)}</p>
+                    <p style={{fontSize:13,color:"#1a73e8",margin:"0 0 6px 0"}}>🇯🇵 {q.vocab_meaning}</p>
+                    <button onClick={()=>speak(q.vocab_word,"en-US")}
+                      style={{background:speaking===q.vocab_word?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.vocab_word?"#1a9fd4":"#ddd"}`,color:speaking===q.vocab_word?"#1a9fd4":"#666",padding:"4px 10px",borderRadius:8,fontSize:11,cursor:"pointer"}}>
+                      {speaking===q.vocab_word?"🔊 Playing...":"🔊 単語を聞く"}
+                    </button>
+                  </div>
+                  <div style={{borderTop:"1px dashed #a5d6a7",margin:"8px 0"}}/>
+                  <div style={{background:"white",border:"1px solid #c8e6c9",borderRadius:10,padding:"10px 12px"}}>
+                    <p style={{fontSize:14,color:"#333",margin:"0 0 4px 0",fontStyle:"italic"}}>{q.example_en}</p>
+                    <p style={{fontSize:12,color:"#888",margin:"0 0 6px 0"}}>{q.example_jp}</p>
+                    <button onClick={()=>speak(q.example_en,"en-US")}
+                      style={{background:speaking===q.example_en?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.example_en?"#1a9fd4":"#ddd"}`,color:speaking===q.example_en?"#1a9fd4":"#666",padding:"4px 10px",borderRadius:8,fontSize:11,cursor:"pointer"}}>
+                      {speaking===q.example_en?"🔊 Playing...":"🔊 例文を聞く"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          );
+        })}
+
+        {/* 単語クイズ */}
+        <div id="vocab-quiz-section" style={{background:"linear-gradient(135deg,#7b1fa2,#4a148c)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <h2 style={{color:"white",fontSize:16,fontWeight:"bold",margin:"0 0 2px 0"}}>🧩 単語クイズ / Vocabulary Quiz</h2>
+          <p style={{color:"rgba(255,255,255,0.8)",fontSize:12,margin:0}}>日本語の意味に合う英単語を選ぼう！</p>
+        </div>
+
+        <div style={{background:"white",borderRadius:14,marginBottom:14,padding:"10px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #e1bee7"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,padding:"0 4px"}}>
+            <p style={{fontSize:14,fontWeight:"bold",color:"#7b1fa2",margin:0}}>📝 単語クイズ</p>
+            <span style={{background:"#7b1fa2",color:"white",borderRadius:20,padding:"3px 12px",fontSize:13,fontWeight:"bold"}}>{quizCorrectCount} / {vocabQuiz.length}</span>
+          </div>
+          {vocabQuiz.map((v,i)=>{
+            const answered=quizAnswers[v.id];
+            return (
+              <div key={v.id} style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"7px 4px",borderBottom:i<vocabQuiz.length-1?"1px solid #f3e5f5":"none"}}>
+                <span style={{fontSize:13,fontWeight:"bold",color:"#4a148c",flex:"1 1 120px",minWidth:90}}>{v.meaning}</span>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                  {v.choices.map(choice=>{
+                    const isSelected=answered===choice;
+                    const isCorrectChoice=choice===v.correct;
+                    let bg="#f5f5f5",border="1px solid #ddd",color="#333";
+                    if(answered){
+                      if(isCorrectChoice){bg="#e8f5e9";border="1px solid #43a047";color="#2e7d32";}
+                      else if(isSelected){bg="#ffebee";border="1px solid #e53935";color="#c62828";}
+                    }
+                    return <button key={choice} onClick={()=>handleQuizAnswer(v.id,choice)} disabled={!!answered}
+                      style={{background:bg,border,color,padding:"5px 10px",borderRadius:8,fontSize:12,fontWeight:"bold",cursor:answered?"default":"pointer"}}>
+                      {choice}
+                    </button>;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          {vocabQuiz.length>0 && quizCorrectCount===vocabQuiz.length && <p style={{textAlign:"center",fontSize:15,fontWeight:"bold",color:"#43a047",marginTop:10}}>🎉 全問正解！Perfect!</p>}
+        </div>
+
+                {submitError&&<div style={{background:"#ffebee",border:"1px solid #e53935",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13,color:"#c62828"}}>⚠️ {submitError}</div>}
+        <button onClick={handleSubmit} disabled={submitting}
+          style={{width:"100%",background:submitting?"#90a4ae":"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",border:"none",padding:"17px",borderRadius:16,fontSize:16,cursor:submitting?"default":"pointer",fontWeight:"bold",boxShadow:submitting?"none":"0 4px 14px rgba(26,159,212,0.4)",transition:"all 0.2s"}}>
+          {submitting?"⏳ Submitting...":"📬 できた！提出する / Submit!"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+</script>
+</body>
+</html>
