@@ -1,0 +1,241 @@
+<!--
+  ═══════════════════════════════════════════════════════════════
+  answer_sheet 印刷用テンプレート（解答用紙・A4印刷専用）
+  ═══════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ASSIGNMENT_ID}} 解答用紙</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.4.4/qrcode.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4; margin: 0; }
+body { background: #e8e8e8; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; color: #000; }
+.print-btn {
+  position: fixed; top: 16px; right: 16px; z-index: 10;
+  padding: 10px 20px; background: #1a9fd4; color: #fff; border: none;
+  border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25); font-family: inherit;
+}
+.page {
+  width: 210mm; height: 297mm; background: #fff;
+  margin: 12mm auto; position: relative; overflow: hidden;
+  box-shadow: 0 0 8px rgba(0,0,0,0.18);
+}
+.page-topline {
+  position: absolute; top: 5mm; left: 15mm; right: 15mm;
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px solid #000; padding-bottom: 2mm;
+}
+.page-title { font-weight: bold; font-size: 13px; }
+.page-student { font-size: 10px; color: #333; }
+.problem-box { position: absolute; border: 1px solid #666; border-radius: 3px; overflow: hidden; background: #fff; }
+.eq-box .box-label {
+  display: flex; align-items: center; gap: 3px; height: 7mm; padding: 0 2mm;
+  background: #f2f2f2; border-bottom: 1px solid #999; overflow: hidden; white-space: nowrap;
+}
+.eq-box .qnum {
+  display: inline-block; background: #000; color: #fff; border-radius: 3px;
+  padding: 0 5px; font-size: 10px; font-weight: bold; flex-shrink: 0;
+}
+.eq-box .badge {
+  display: inline-block; border: 1px solid #888; color: #333; border-radius: 3px;
+  padding: 0 5px; font-size: 9px; flex-shrink: 0;
+}
+.eq-box .box-qtext { font-size: 10px; color: #222; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.eq-box .box-lines {
+  position: absolute; top: 7mm; left: 0; right: 0; bottom: 0;
+  background-image: repeating-linear-gradient(to bottom, transparent, transparent 6mm, #ccc 6mm, #ccc 6.2mm);
+}
+.ans-box .box-tag {
+  position: absolute; top: 0; left: 0; font-size: 8px; color: #999; background: #fff;
+  padding: 0 1mm; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 3px;
+}
+.qr-canvas-wrap { position: absolute; left: 169mm; top: 268mm; width: 26mm; height: 26mm; }
+.qr-canvas-wrap canvas, .qr-canvas-wrap img { width: 26mm !important; height: 26mm !important; }
+.footer-text { position: absolute; left: 15mm; top: 268mm; width: 145mm; font-size: 8px; color: #444; line-height: 1.4; }
+.layout-save-status { position: absolute; left: 15mm; top: 281mm; width: 145mm; font-size: 9px; color: #888; }
+.layout-save-ok { color: #2e7d32; }
+.layout-save-err { color: #c62828; }
+.empty-msg { text-align: center; color: #888; font-size: 13px; padding: 40px 0; }
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .page { margin: 0; box-shadow: none; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ 印刷する</button>
+<div id="pages"></div>
+
+<script>
+const SUPABASE_URL = "https://upmflhdbhbyzoeldrvvw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+
+const ASSIGNMENT_ID = "asgn_1782971673337_e180t8";
+const STUDENT_ID = "S-0018";
+const STUDENT_NAME = "阿部 優子";
+
+const questions = [
+  {"id": 1, "problem_id": "asgn_1782971673337_e180t8_q1", "question": "うさりんが、にんじんを配ります。次の計算をしなさい。(1) 0本×3わ (2) 5本×0わ (3) 0本×0わ (4) 1本×0わ", "unit": "かけ算のきまり", "level": "example_follow"},
+  {"id": 2, "problem_id": "asgn_1782971673337_e180t8_q2", "question": "うさりんの友達が、クッキーを10個ずつ用意しました。次の計算をしなさい。(1) 3×10 (2) 5×10 (3) 4×10 (4) 8×10", "unit": "かけ算のきまり", "level": "confirmation"},
+  {"id": 3, "problem_id": "asgn_1782971673337_e180t8_q3", "question": "うさりんが、野菜のセットを作っています。次の□にあてはまる数をかきなさい。(1) 6×4=□、6×5=□ (2) 7×4=□、7×5=□ (3) 8×4=□、8×5=□ (4) 9×4=□、9×5=□", "unit": "かけ算のきまり", "level": "confirmation"},
+  {"id": 4, "problem_id": "asgn_1782971673337_e180t8_q4", "question": "うさりんとお友達で、りんごを配っています。次の□にあてはまる数をかきなさい。(1) 5×3=□、5×4=□ (2) 6×3=□、6×4=□ (3) 7×3=□、7×4=□", "unit": "かけ算のきまり", "level": "confirmation"},
+  {"id": 5, "problem_id": "asgn_1782971673337_e180t8_q5", "question": "うさりんが、お花を3本ずつ8人のお友達に配るのに必要なお花の数をもとめなさい。しかし、4本足りなかったので、はじめにあったお花の数をもとめなさい。", "unit": "かけ算のきまり", "level": "practice"},
+  {"id": 6, "problem_id": "asgn_1782971673337_e180t8_q6", "question": "うさりんのお庭に、お花が5本のたばが3たばあります。お花は全部で何本ありますか。", "unit": "かけ算の応用", "level": "example_follow"},
+  {"id": 7, "problem_id": "asgn_1782971673337_e180t8_q7", "question": "うさりんのお店で、にんじんが3本ずつのセットが7セットあります。にんじんは全部で何本ですか。", "unit": "かけ算の応用", "level": "confirmation"},
+  {"id": 8, "problem_id": "asgn_1782971673337_e180t8_q8", "question": "うさりんが、クッキーを4個ずつ9箱に詰めるのに必要なクッキーの数をもとめなさい。ただし、5個足りなかったので、はじめにあったクッキーの数をもとめなさい。", "unit": "かけ算の応用", "level": "confirmation"},
+  {"id": 9, "problem_id": "asgn_1782971673337_e180t8_q9", "question": "うさりんの友達が、お菓子を6個ずつ5袋用意しました。お菓子は全部で何個ですか。", "unit": "かけ算の応用", "level": "confirmation"},
+  {"id": 10, "problem_id": "asgn_1782971673337_e180t8_q10", "question": "うさりんが、えん筆を2本ずつ7人に配るのに必要なえん筆の数をもとめなさい。しかし、3本足りなかったので、はじめにあったえん筆の数をもとめなさい。", "unit": "かけ算の応用", "level": "practice"}
+];
+
+const LEVEL_LABEL = { example_follow: '例題', confirmation: '確認', practice: '練習' };
+const PER_PAGE = 5;
+const totalPages = Math.max(1, Math.ceil(questions.length / PER_PAGE));
+
+const PAGE_MARGIN_X = 15;
+const PROBLEM_WIDTH = 180;
+const PROBLEM_LAYOUT_MM = [0, 1, 2, 3, 4].map(function(i) {
+  const top = 18 + i * 48;
+  return {
+    equation_box: { x: PAGE_MARGIN_X, y: top, width: PROBLEM_WIDTH, height: 30 },
+    answer_box:   { x: PAGE_MARGIN_X, y: top + 30, width: PROBLEM_WIDTH, height: 18 }
+  };
+});
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function boxStyle(box) {
+  return 'left:' + box.x + 'mm;top:' + box.y + 'mm;width:' + box.width + 'mm;height:' + box.height + 'mm';
+}
+
+function buildProblemBoxHtml(q, globalIndex, boxes) {
+  const num = globalIndex + 1;
+  const lb = q.level ? (LEVEL_LABEL[q.level] || q.level) : '';
+  return (
+    '<div class="problem-box eq-box" style="' + boxStyle(boxes.equation_box) + '">' +
+      '<div class="box-label">' +
+        '<span class="qnum">Q' + num + '</span>' +
+        (q.unit ? '<span class="badge">' + esc(q.unit) + '</span>' : '') +
+        (lb ? '<span class="badge">' + esc(lb) + '</span>' : '') +
+        (q.question ? '<span class="box-qtext">' + esc(q.question) + '</span>' : '') +
+      '</div>' +
+      '<div class="box-lines"></div>' +
+    '</div>' +
+    '<div class="problem-box ans-box" style="' + boxStyle(boxes.answer_box) + '">' +
+      '<span class="box-tag">答え</span>' +
+    '</div>'
+  );
+}
+
+function renderPages() {
+  const container = document.getElementById('pages');
+
+  if (questions.length === 0) {
+    container.innerHTML = '<div class="page"><div class="empty-msg">問題データがありません</div></div>';
+    return;
+  }
+
+  let html = '';
+  for (let page = 1; page <= totalPages; page++) {
+    const start = (page - 1) * PER_PAGE;
+    const pageQuestions = questions.slice(start, start + PER_PAGE);
+    const footerText = 'assignment_id: ' + esc(ASSIGNMENT_ID) + ' | ' + esc(STUDENT_NAME) + '(' + esc(STUDENT_ID) + ') | ' + page + '/' + totalPages + 'ページ';
+
+    html += '<div class="page" id="page-' + page + '">';
+    html += '<div class="page-topline">' +
+      '<span class="page-title">' + esc(ASSIGNMENT_ID) + ' 解答用紙</span>' +
+      '<span class="page-student">' + esc(STUDENT_NAME) + '（' + esc(STUDENT_ID) + '） ・ ' + page + '/' + totalPages + 'ページ</span>' +
+    '</div>';
+
+    pageQuestions.forEach(function(q, i) {
+      html += buildProblemBoxHtml(q, start + i, PROBLEM_LAYOUT_MM[i]);
+    });
+
+    html += '<div class="qr-canvas-wrap" id="qr-' + page + '"></div>';
+    html += '<div class="footer-text">' + footerText + '</div>';
+    html += '<div class="layout-save-status no-print" id="layout-status-' + page + '">レイアウト情報を保存中...</div>';
+
+    html += '</div>';
+  }
+  container.innerHTML = html;
+
+  for (let page = 1; page <= totalPages; page++) {
+    const payload = JSON.stringify({
+      assignment_id: ASSIGNMENT_ID,
+      student_id: STUDENT_ID,
+      page: page,
+      total_pages: totalPages
+    });
+    new QRCode(document.getElementById('qr-' + page), {
+      text: payload,
+      width: 110,
+      height: 110,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    const start = (page - 1) * PER_PAGE;
+    const pageQuestions = questions.slice(start, start + PER_PAGE);
+    saveLayoutData(page, pageQuestions);
+  }
+}
+
+function saveLayoutData(page, pageQuestions) {
+  const statusEl = document.getElementById('layout-status-' + page);
+  const problems = pageQuestions.map(function(q, i) {
+    const boxes = PROBLEM_LAYOUT_MM[i];
+    return {
+      problem_id: q.problem_id || q.id,
+      equation_box: boxes.equation_box,
+      answer_box: boxes.answer_box
+    };
+  });
+
+  const delUrl = SUPABASE_URL + '/rest/v1/answer_sheets?assignment_id=eq.' + encodeURIComponent(ASSIGNMENT_ID) +
+    '&student_id=eq.' + encodeURIComponent(STUDENT_ID) + '&page=eq.' + page;
+
+  fetch(delUrl, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+  }).then(function() {
+    return fetch(SUPABASE_URL + '/rest/v1/answer_sheets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        assignment_id: ASSIGNMENT_ID,
+        student_id: STUDENT_ID,
+        page: page,
+        total_pages: totalPages,
+        layout_data: { problems: problems }
+      })
+    });
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (statusEl) {
+      statusEl.textContent = '✓ レイアウト情報を保存しました（ページ' + page + '/' + totalPages + '）';
+      statusEl.className = 'layout-save-status no-print layout-save-ok';
+    }
+  }).catch(function(e) {
+    if (statusEl) {
+      statusEl.textContent = '⚠️ レイアウト情報の保存に失敗しました: ' + e.message;
+      statusEl.className = 'layout-save-status no-print layout-save-err';
+    }
+  });
+}
+
+renderPages();
+</script>
+</body>
+</html>
