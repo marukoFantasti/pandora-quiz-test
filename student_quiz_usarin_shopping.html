@@ -225,14 +225,6 @@ const illustrations = {
   </svg>),
 };
 
-// カタカナ読みのアクセント表記（"サ*ンド*イッチ" の * で挟まれた部分を強調）
-function renderAccent(katakana){
-  if(!katakana) return null;
-  const parts = katakana.split("*");
-  if(parts.length < 3) return katakana;
-  return <>{parts[0]}<strong style={{color:"#e65100",textDecoration:"underline"}}>{parts[1]}</strong>{parts.slice(2).join("")}</>;
-}
-
 function DrawCanvas({ id, height=120, label, canvasRef: externalRef, internalHeight=150 }) {
   const internalRef = React.useRef(null);
   const canvasRef = externalRef || internalRef;
