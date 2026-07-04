@@ -1,0 +1,342 @@
+<!--
+  ═══════════════════════════════════════════════════════════════
+  answer_sheet 印刷用テンプレート（解答用紙・A4印刷専用）
+  ═══════════════════════════════════════════════════════════════
+  student_quiz_domestic/overseas_template.html（Web提出用、React+
+  DrawCanvas）とは別物。こちらは生徒の手書きキャンバス送信は
+  一切なく、印刷して紙に手書きさせるための静的HTML。
+
+  ただしこのファイル自身が「layout_data（各問題の式欄・答え欄の
+  mm座標）」を自動計算し、表示時にSupabaseのanswer_sheetsテーブルへ
+  自動保存する（photo_intake.htmlが後でこのlayout_dataを読み、
+  写真から各問題を自動切り出しするために使う）。
+
+  【使い方】このHTMLの{{...}}プレースホルダーを埋めて生成する：
+    asgn_1783144210219_5q1p8x  - 課題ID（QRコード・レイアウト保存・隅の
+                         目視用テキストに使用）
+    S-0018     - 生徒ID（同上）
+    阿部 優子   - 生徒名（同上）
+    {{QUESTIONS}}      - questions配列の中身。各要素の形式：
+                         { id, problem_id, question, answer, unit,
+                           chapter, level, tags }
+                         level は 'example_follow' | 'confirmation'
+                         | 'practice' のいずれか（バッジ表示用、
+                         省略可）。answer/chapter/tagsは印刷表示には
+                         使わないが、layout_data経由でSupabaseの
+                         answer_sheetsに保存され、photo_intake.htmlが
+                         写真取り込み時のsubmissions保存に使うため、
+                         生成側（pandora_main.htmlのプロンプト）は
+                         questionsに必ず含めること
+
+  【座標系（重要）】1ページ5問固定。各問題の式欄・答え欄は、
+  PROBLEM_LAYOUT_MM で定義した「A4ページ左上(0,0)を基準としたmm
+  座標の絶対位置」に配置する（flexレイアウトではなくposition:
+  absoluteで固定配置。CSSの見た目とlayout_dataの数値が必ず一致する
+  ようにするため）：
+    問題1: 式 y=18-48mm  / 答え y=48-66mm
+    問題2: 式 y=66-96mm  / 答え y=96-114mm
+    問題3: 式 y=114-144mm / 答え y=144-162mm
+    問題4: 式 y=162-192mm / 答え y=192-210mm
+    問題5: 式 y=210-240mm / 答え y=240-258mm
+    （すべて x=15mm, width=180mm。上マージン18mm、各ブロック
+    高さ48mm＝式30mm＋答え18mm、ブロック間の余白なし＝隣接する
+    問題同士が枠線を共有する形で連続配置。5問合計で18mm〜258mm
+    の240mmを使用）
+  QRコードと目視用フッターテキストは、問題群と重ならないよう
+  ページ下部余白（ページ番号ラベルはy=258mm以降、QRはy=264mm以降、
+  フッターテキストはy=268mm以降）
+  に配置。ページ上部（y=0-18mm）には課題ID・生徒名の一行ラベル
+  のみ配置（layout_dataには含まれない）。
+
+  questions.lengthに応じて自動でページ分割される（10問なら2ページ、
+  7問なら2ページ目に2問、など端数も可）。
+
+  【QRコード】
+  - 使用ライブラリ: qrcodejs
+    https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
+  - 表示サイズ25mm四方（生成解像度200x200px、correctLevel=H＝高い
+    誤り訂正率。印刷・撮影による多少のかすれ・汚れでも読み取れるよう
+    大きめ・高耐性にしている）
+  - 中身は以下のJSON文字列（ページごとに page の値だけ変わる）：
+    {"assignment_id":"asgn_1783144210219_5q1p8x","student_id":"S-0018",
+     "page":<そのページの番号>,"total_pages":<総ページ数>}
+
+  【layout_dataの自動保存】
+  renderPages() がページを描画するたび、そのページの5問分の
+  equation_box/answer_box座標（PROBLEM_LAYOUT_MMそのもの）と、
+  questions配列由来のquestion/answer/unit/chapter/level/tagsを
+  problem_idと紐づけてSupabaseのanswer_sheetsテーブルに保存する
+  （photo_intake.htmlが写真取り込み時、これらの値をそのまま
+  submissionsのproblems[]に転記するために使う）：
+    1. 同じ assignment_id + student_id + page の既存行をDELETE
+       （PostgRESTにON CONFLICTがないため、上書きは削除→挿入で行う）
+    2. { assignment_id, student_id, page, total_pages, layout_data:
+       { problems: [{ problem_id, equation_box, answer_box, question,
+       answer, unit, chapter, level, tags }, ...] } } をPOST
+  保存結果（成功/失敗）は各ページ下部に小さく表示する
+  （class="no-print" のため印刷はされず、画面確認用）。
+
+  【著作権注意】イラスト等は使用しない。罫線ベースのシンプルな
+  デザインのみ（世界観演出はWeb提出用テンプレートの役割であり、
+  印刷して実用に使う本テンプレートには不要）。
+  ═══════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>asgn_1783144210219_5q1p8x 解答用紙</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4; margin: 0; }
+body { background: #e8e8e8; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; color: #000; }
+.print-btn {
+  position: fixed; top: 16px; right: 16px; z-index: 10;
+  padding: 10px 20px; background: #1a9fd4; color: #fff; border: none;
+  border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25); font-family: inherit;
+}
+.page {
+  width: 210mm; height: 297mm; background: #fff;
+  margin: 12mm auto; position: relative; overflow: hidden;
+  box-shadow: 0 0 8px rgba(0,0,0,0.18);
+}
+.page-topline {
+  position: absolute; top: 5mm; left: 15mm; right: 15mm;
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px solid #000; padding-bottom: 2mm;
+}
+.page-title { font-weight: bold; font-size: 13px; }
+.page-student { font-size: 10px; color: #333; }
+.problem-box { position: absolute; border: 1px solid #666; border-radius: 3px; overflow: hidden; background: #fff; }
+.eq-box .box-label {
+  display: flex; align-items: center; gap: 3px; height: 7mm; padding: 0 2mm;
+  background: #f2f2f2; border-bottom: 1px solid #999; overflow: hidden; white-space: nowrap;
+}
+.eq-box .qnum {
+  display: inline-block; background: #000; color: #fff; border-radius: 3px;
+  padding: 0 5px; font-size: 10px; font-weight: bold; flex-shrink: 0;
+}
+.eq-box .badge {
+  display: inline-block; border: 1px solid #888; color: #333; border-radius: 3px;
+  padding: 0 5px; font-size: 9px; flex-shrink: 0;
+}
+.eq-box .box-qtext { font-size: 10px; color: #222; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.eq-box .box-lines {
+  position: absolute; top: 7mm; left: 0; right: 0; bottom: 0;
+  background-image: repeating-linear-gradient(to bottom, transparent, transparent 5.8mm, #ccc 5.8mm, #ccc 6mm);
+}
+.ans-box .box-tag {
+  position: absolute; top: 0; left: 0; font-size: 8px; color: #999; background: #fff;
+  padding: 0 1mm; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 3px;
+}
+.page-number-label {
+  position: absolute; left: 165mm; top: 258mm; width: 25mm; height: 6mm;
+  background: #000; color: #fff; font-size: 17px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px 3px 0 0; letter-spacing: 0.5px;
+}
+.qr-canvas-wrap { position: absolute; left: 165mm; top: 264mm; width: 25mm; height: 25mm; }
+.qr-canvas-wrap canvas, .qr-canvas-wrap img { width: 25mm !important; height: 25mm !important; }
+.footer-text { position: absolute; left: 15mm; top: 268mm; width: 145mm; font-size: 8px; color: #444; line-height: 1.4; }
+.layout-save-status { position: absolute; left: 15mm; top: 281mm; width: 145mm; font-size: 9px; color: #888; }
+.layout-save-ok { color: #2e7d32; }
+.layout-save-err { color: #c62828; }
+.empty-msg { text-align: center; color: #888; font-size: 13px; padding: 40px 0; }
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .page { margin: 0; box-shadow: none; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ 印刷する</button>
+<div id="pages"></div>
+
+<script>
+const SUPABASE_URL = "https://upmflhdbhbyzoeldrvvw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_K8Y_bNHVA4szRXFM_EcDkA_LBckunu5";
+
+const ASSIGNMENT_ID = "asgn_1783144210219_5q1p8x";
+const STUDENT_ID = "S-0018";
+const STUDENT_NAME = "阿部 優子";
+
+const questions = [
+  // ▼▼▼ ここに問題データを差し込む ▼▼▼
+  // 各要素の形式: { id, problem_id, question, answer, unit, chapter, level, tags }
+  // level は 'example_follow' | 'confirmation' | 'practice' のいずれか（省略可）。
+  // answer/chapter/tagsは印刷には使わないが、layout_data経由でanswer_sheetsに
+  // 保存されphoto_intake.htmlのsubmissions保存に使われるため必ず含めること
+  {id:1,problem_id:"asgn_1783144210219_5q1p8x_q1",question:"うさりんは、くまきちからにんじん17本もらいました。その後、ねこにゃんからにんじん18本もらい、さらにりすくんからにんじん12本もらいました。うさりんがもらったにんじんの本数を、かっこを使った式で表して計算しなさい。（式：17＋(18＋12)＝□）",answer:"47本",unit:"3つの数のたし算とひき算",chapter:"3つの数のたし算とひき算",level:"example_follow",tags:[]},
+  {id:2,problem_id:"asgn_1783144210219_5q1p8x_q2",question:"くまきちは、どんぐりを35個持っていました。うさりんが18個くれました。その後、りすくんに12個あげました。くまきちのどんぐりは、最後に何個になったか計算しなさい。",answer:"41個",unit:"3つの数のたし算とひき算",chapter:"3つの数のたし算とひき算",level:"confirmation",tags:[]},
+  {id:3,problem_id:"asgn_1783144210219_5q1p8x_q3",question:"次の場面について、式を立てて計算しなさい。(1)うさりんが、くまきちから24個のいちご、ねこにゃんから15個のいちご、りすくんから11個のいちごをもらいました。うさりんがもらったいちごは全部で何個でしょう。(2)くまきちは、はじめ50個のリンゴを持っていました。うさりんに20個あげて、その後さらに15個あげました。くまきちにのこったリンゴは何個でしょう。",answer:"(1)50個 (2)15個",unit:"3つの数のたし算とひき算",chapter:"3つの数のたし算とひき算",level:"confirmation",tags:[]},
+  {id:4,problem_id:"asgn_1783144210219_5q1p8x_q4",question:"うさりんの家のお金の流れについて計算しなさい。(1)はじめに45円ありました。ママから32円もらい、その後おばあちゃんから23円もらいました。全部でいくらになったでしょう。(2)くまきちは、はじめ100円持っていました。お店で30円使い、その後さらに25円使いました。残りはいくらでしょう。",answer:"(1)100円 (2)45円",unit:"3つの数のたし算とひき算",chapter:"3つの数のたし算とひき算",level:"confirmation",tags:[]},
+  {id:5,problem_id:"asgn_1783144210219_5q1p8x_q5",question:"うさりんとくまきちが、森で果物を集めました。うさりんは、はじめにぶどう28個持っていました。くまきちから16個もらい、その後りすくんから19個もらいました。さらに、ねこにゃんに12個あげてしまいました。うさりんの手元には、最後に何個の果物が残っているか、式を立てて計算しなさい。",answer:"51個",unit:"3つの数のたし算とひき算",chapter:"3つの数のたし算とひき算",level:"practice",tags:[]},
+  {id:6,problem_id:"asgn_1783144210219_5q1p8x_q6",question:"うさりんとくまきちが、九九を勉強しています。次の6のだんと7のだんの九九表を完成させなさい。\n【6のだん】6×1＝□、6×2＝□、6×3＝□、6×4＝□、6×5＝□、6×6＝□、6×7＝□、6×8＝□、6×9＝□\n【7のだん】7×1＝□、7×2＝□、7×3＝□、7×4＝□、7×5＝□、7×6＝□、7×7＝□、7×8＝□、7×9＝□",answer:"【6のだん】6、12、18、24、30、36、42、48、54 【7のだん】7、14、21、28、35、42、49、56、63",unit:"6のだん、7のだんの九九",chapter:"6のだん、7のだんの九九",level:"example_follow",tags:[]},
+  {id:7,problem_id:"asgn_1783144210219_5q1p8x_q7",question:"くまきちが、森の動物たちに食べ物を配ります。次の場面について、6のだんの九九を使って計算しなさい。(1)りんごを6個ずつ、4わに配ります。全部で何個必要でしょう。(2)どんぐりを6個ずつ、7わに配ります。全部で何個必要でしょう。(3)木の実を6個ずつ、9わに配ります。全部で何個必要でしょう。",answer:"(1)24個 (2)42個 (3)54個",unit:"6のだん、7のだんの九九",chapter:"6のだん、7のだんの九九",level:"confirmation",tags:[]},
+  {id:8,problem_id:"asgn_1783144210219_5q1p8x_q8",question:"うさりんが、7のだんの九九を使って計算します。次の場面について計算しなさい。(1)ねこにゃんが、7本の鉛筆を5人にあげます。全部で何本必要でしょう。(2)りすくんのグループが、7個のお菓子を6グループ分作ります。全部で何個必要でしょう。(3)くまきちが、7個のぼたんを8枚の服に付けます。全部で何個のぼたんが必要でしょう。",answer:"(1)35本 (2)42個 (3)56個",unit:"6のだん、7のだんの九九",chapter:"6のだん、7のだんの九九",level:"confirmation",tags:[]},
+  {id:9,problem_id:"asgn_1783144210219_5q1p8x_q9",question:"森のお店でお買い物をします。次の場面について、九九を使って計算しなさい。(1)ねこにゃんが、6円のあめを9個買いました。いくらかかるでしょう。(2)りすくんが、7円のクッキーを8個買いました。いくらかかるでしょう。",answer:"(1)54円 (2)56円",unit:"6のだん、7のだんの九九",chapter:"6のだん、7のだんの九九",level:"confirmation",tags:[]},
+  {id:10,problem_id:"asgn_1783144210219_5q1p8x_q10",question:"うさりんとくまきちが、畑で野菜を育てています。(1)トマトの苗が、6列に並んでいます。1列に7本ずつあります。全部で何本のトマトの苗があるか、計算しなさい。(2)きゅうりの苗が、7列に並んでいます。1列に6本ずつあります。全部で何本のきゅうりの苗があるか、計算しなさい。(3)トマトときゅうりの苗の合計は何本になるか、計算しなさい。",answer:"(1)42本 (2)42本 (3)84本",unit:"6のだん、7のだんの九九",chapter:"6のだん、7のだんの九九",level:"practice",tags:[]},
+];
+
+const LEVEL_LABEL = { example_follow: '例題', confirmation: '確認', practice: '練習' };
+const PER_PAGE = 5;
+const totalPages = Math.max(1, Math.ceil(questions.length / PER_PAGE));
+
+// 1ページ5問分の固定mm座標（A4ページ左上(0,0)基準）。
+// 上マージン18mm、各問題ブロック高さ48mm（式30mm+答え18mm）、ブロック間余白なし
+// （隣接する問題同士が枠線を共有して連続配置。5問合計で18mm〜258mmの240mmを使用）。
+const PAGE_MARGIN_X = 15;
+const PROBLEM_WIDTH = 180;
+const PROBLEM_LAYOUT_MM = [0, 1, 2, 3, 4].map(function(i) {
+  const top = 18 + i * 48;
+  return {
+    equation_box: { x: PAGE_MARGIN_X, y: top, width: PROBLEM_WIDTH, height: 30 },
+    answer_box:   { x: PAGE_MARGIN_X, y: top + 30, width: PROBLEM_WIDTH, height: 18 }
+  };
+});
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function boxStyle(box) {
+  return 'left:' + box.x + 'mm;top:' + box.y + 'mm;width:' + box.width + 'mm;height:' + box.height + 'mm';
+}
+
+function buildProblemBoxHtml(q, globalIndex, boxes) {
+  const num = globalIndex + 1;
+  const lb = q.level ? (LEVEL_LABEL[q.level] || q.level) : '';
+  return (
+    '<div class="problem-box eq-box" style="' + boxStyle(boxes.equation_box) + '">' +
+      '<div class="box-label">' +
+        '<span class="qnum">Q' + num + '</span>' +
+        (q.unit ? '<span class="badge">' + esc(q.unit) + '</span>' : '') +
+        (lb ? '<span class="badge">' + esc(lb) + '</span>' : '') +
+        (q.question ? '<span class="box-qtext">' + esc(q.question) + '</span>' : '') +
+      '</div>' +
+      '<div class="box-lines"></div>' +
+    '</div>' +
+    '<div class="problem-box ans-box" style="' + boxStyle(boxes.answer_box) + '">' +
+      '<span class="box-tag">答え</span>' +
+    '</div>'
+  );
+}
+
+function renderPages() {
+  const container = document.getElementById('pages');
+
+  if (questions.length === 0) {
+    container.innerHTML = '<div class="page"><div class="empty-msg">問題データがありません</div></div>';
+    return;
+  }
+
+  let html = '';
+  for (let page = 1; page <= totalPages; page++) {
+    const start = (page - 1) * PER_PAGE;
+    const pageQuestions = questions.slice(start, start + PER_PAGE);
+    const footerText = 'assignment_id: ' + esc(ASSIGNMENT_ID) + ' | ' + esc(STUDENT_NAME) + '(' + esc(STUDENT_ID) + ') | ' + page + '/' + totalPages + 'ページ';
+
+    html += '<div class="page" id="page-' + page + '">';
+    html += '<div class="page-topline">' +
+      '<span class="page-title">' + esc(ASSIGNMENT_ID) + ' 解答用紙</span>' +
+      '<span class="page-student">' + esc(STUDENT_NAME) + '（' + esc(STUDENT_ID) + '） ・ ' + page + '/' + totalPages + 'ページ</span>' +
+    '</div>';
+
+    pageQuestions.forEach(function(q, i) {
+      html += buildProblemBoxHtml(q, start + i, PROBLEM_LAYOUT_MM[i]);
+    });
+
+    html += '<div class="page-number-label">' + page + ' / ' + totalPages + '</div>';
+    html += '<div class="qr-canvas-wrap" id="qr-' + page + '"></div>';
+    html += '<div class="footer-text">' + footerText + '</div>';
+    html += '<div class="layout-save-status no-print" id="layout-status-' + page + '">レイアウト情報を保存中...</div>';
+
+    html += '</div>'; // .page
+  }
+  container.innerHTML = html;
+
+  for (let page = 1; page <= totalPages; page++) {
+    const payload = JSON.stringify({
+      assignment_id: ASSIGNMENT_ID,
+      student_id: STUDENT_ID,
+      page: page,
+      total_pages: totalPages
+    });
+    new QRCode(document.getElementById('qr-' + page), {
+      text: payload,
+      width: 200,
+      height: 200,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    const start = (page - 1) * PER_PAGE;
+    const pageQuestions = questions.slice(start, start + PER_PAGE);
+    saveLayoutData(page, pageQuestions);
+  }
+}
+
+// ページのlayout_data（式欄・答え欄のmm座標）をSupabaseへ自動保存。
+// 同じassignment_id+student_id+pageの既存行は削除してから挿入する（上書き代わり）。
+function saveLayoutData(page, pageQuestions) {
+  const statusEl = document.getElementById('layout-status-' + page);
+  const problems = pageQuestions.map(function(q, i) {
+    const boxes = PROBLEM_LAYOUT_MM[i];
+    return {
+      problem_id: q.problem_id || q.id,
+      equation_box: boxes.equation_box,
+      answer_box: boxes.answer_box,
+      question: q.question || null,
+      answer: q.answer || null,
+      unit: q.unit || null,
+      chapter: q.chapter || null,
+      level: q.level || null,
+      tags: q.tags || []
+    };
+  });
+
+  const delUrl = SUPABASE_URL + '/rest/v1/answer_sheets?assignment_id=eq.' + encodeURIComponent(ASSIGNMENT_ID) +
+    '&student_id=eq.' + encodeURIComponent(STUDENT_ID) + '&page=eq.' + page;
+
+  fetch(delUrl, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+  }).then(function() {
+    return fetch(SUPABASE_URL + '/rest/v1/answer_sheets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        assignment_id: ASSIGNMENT_ID,
+        student_id: STUDENT_ID,
+        page: page,
+        total_pages: totalPages,
+        layout_data: { problems: problems }
+      })
+    });
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (statusEl) {
+      statusEl.textContent = '✓ レイアウト情報を保存しました（ページ' + page + '/' + totalPages + '）';
+      statusEl.className = 'layout-save-status no-print layout-save-ok';
+    }
+  }).catch(function(e) {
+    if (statusEl) {
+      statusEl.textContent = '⚠️ レイアウト情報の保存に失敗しました: ' + e.message;
+      statusEl.className = 'layout-save-status no-print layout-save-err';
+    }
+  });
+}
+
+renderPages();
+</script>
+</body>
+</html>
