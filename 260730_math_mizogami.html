@@ -1,0 +1,372 @@
+<!--
+  ═══════════════════════════════════════════════════════════════
+  student_quiz テンプレート（国内向け・算数×英語ハイブリッド）
+  ═══════════════════════════════════════════════════════════════
+  出典: student_quiz_doraemon_overseas.html の骨格をベースに、
+  漢字クイズを単語マッチングコーナーへ差し替えて作成（2026-07-02）
+
+  【使い方】このHTMLの{{...}}プレースホルダーを埋めて生成する：
+    白いねこの算数だいさくせん！（小2・10問）      - <title>タグの中身
+    {{QUIZ_META}}       - const QUIZ_META = {...}; の定義
+    {{QUESTIONS}}       - questions配列の中身（各要素にvocab_word/
+                          vocab_katakana/vocab_meaning/example_en/
+                          example_jpを含めると+Englishパネルと
+                          単語クイズに自動で反映される）
+    {{ILLUSTRATIONS}}   - illustrationsオブジェクトの中身
+
+  【著作権注意】illustrations・questionsに実在の著作物
+  （アニメ・ゲーム・企業キャラクター等）は使用しないこと。
+  テーマに寄せたオリジナルキャラクター・モチーフのみ可。
+
+  【骨格に含まれる主な機能】
+  - DrawCanvas: ペン/消しゴム/全消去、canvas解像度1200x{height}固定
+    （幅を変えると採点UI側で歪んで表示されるので変更しないこと）
+  - +Englishパネル（1問=1単語カード。questions[].vocab_word/
+    vocab_katakana/vocab_meaning/example_en/example_jpを使用し、
+    単語・例文それぞれに🔊読み上げボタン付き）
+  - レベルバッジ（例題:紫/確認:青/練習:橙、questions[].levelで判定）
+  - 単語クイズ（questions全問のvocab_meaningを問題文にした3択クイズ。
+    正解はvocab_word、誤答2つは他問題のvocab_wordからランダム抽出）
+  - Supabase送信: student_id/student_name の両方を必ず含める
+    （どちらか欠けると採点UI側で表示が壊れる）
+  ═══════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>白いねこの算数だいさくせん！（小2・10問）</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; }
+    ruby { ruby-align: center; }
+    rt { font-size: 10px; color: #888; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ▼▼▼ QUIZ_META をここに定義する（Pandora側で埋め込む） ▼▼▼
+// 例: const QUIZ_META = {
+//   assignment_id: "asgn_xxxx", mode: "domestic", grades: ["g03"],
+//   theme_title: "算数×英語を学ぼう！", theme_label: "テーマ名",
+//   theme_icon: "🐰", grade_label: "小3",
+//   student_name: "阿部 優子"  // 生徒を選んで生成した場合のみ
+// };
+const QUIZ_META = {
+  assignment_id: "asgn_1785413171201_riw9kj",
+  mode: "domestic",
+  grades: ["g02"],
+  theme_title: "白いねこの算数だいさくせん！",
+  theme_label: "にゃんこ大戦争風",
+  theme_icon: "🐱",
+  grade_label: "小2",
+  student_name: "溝上 優大郎"
+};
+
+const LEVEL_BADGE = {
+  example_follow: { label:"例題", color:"#7b1fa2", bg:"#f3e5f5" },
+  confirmation:   { label:"確認", color:"#1a9fd4", bg:"#e1f5fe" },
+  practice:       { label:"練習", color:"#e65100", bg:"#fff3e0" },
+};
+const UNIT_COLORS = {
+  "整数のわり算": { color:"#1a73e8", bg:"#e8f0fe" },
+  "式と計算":     { color:"#2e7d32", bg:"#e8f5e9" },
+};
+
+// カタカナ読みのアクセント表記（"サ*ンド*イッチ" の * で挟まれた部分を強調）
+function renderAccent(katakana){
+  if(!katakana) return null;
+  const parts = katakana.split("*");
+  if(parts.length < 3) return katakana;
+  return <>{parts[0]}<strong style={{color:"#e65100",textDecoration:"underline"}}>{parts[1]}</strong>{parts.slice(2).join("")}</>;
+}
+
+const questions = [
+  // ▼▼▼ ここに問題データを差し込む ▼▼▼
+  // 各要素の形式: { id, problem_id, tags:[], question, unit, chapter, level,
+  //   jp:<span>ふりがな付きJSX</span>, answer,
+  //   vocab_word:"英単語", vocab_katakana:"カタカナ読み（アクセントの
+  //     モーラを * で挟む。例: "サ*ンド*イッチ" なら "ンド" を強調表示）",
+  //   vocab_meaning:"日本語訳", example_en:"英語の例文", example_jp:"例文の日本語訳" }
+  // level は 'example_follow' | 'confirmation' | 'practice' のいずれか
+  { id:1, problem_id:"asgn_1785413171201_riw9kj_q1", tags:[], level:"example_follow",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"白いねこのボスは、にゃんこたいせんそうのしゅぎょうを9時45分にはじめました。はじめてから15分後の時こくは何時何分ですか。",
+    answer:"10時0分",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこのボスは、にゃんこたいせんそうのしゅぎょうを9<ruby>時<rt>じ</rt></ruby>45<ruby>分<rt>ふん</rt></ruby>にはじめました。はじめてから15<ruby>分<rt>ふん</rt></ruby><ruby>後<rt>ご</rt></ruby>の<ruby>時<rt>と</rt></ruby>こくは<ruby>何時<rt>なんじ</rt></ruby><ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    vocab_word:"time", vocab_katakana:"*タ*イム", vocab_meaning:"時こく",
+    example_en:"What time is it?", example_jp:"何時ですか？" },
+  { id:2, problem_id:"asgn_1785413171201_riw9kj_q2", tags:[], level:"confirmation",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"白いねこのボスは毎日、朝9時15分からしゅぎょうをはじめます。9時15分から30分後の時こくは何時何分ですか。",
+    answer:"9時45分",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこのボスは<ruby>毎日<rt>まいにち</rt></ruby>、<ruby>朝<rt>あさ</rt></ruby>9<ruby>時<rt>じ</rt></ruby>15<ruby>分<rt>ふん</rt></ruby>からしゅぎょうをはじめます。9<ruby>時<rt>じ</rt></ruby>15<ruby>分<rt>ふん</rt></ruby>から30<ruby>分<rt>ぷん</rt></ruby><ruby>後<rt>ご</rt></ruby>の<ruby>時<rt>と</rt></ruby>こくは<ruby>何時<rt>なんじ</rt></ruby><ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    vocab_word:"every day", vocab_katakana:"*エ*ブリデー", vocab_meaning:"毎日",
+    example_en:"What time will it be after 30 minutes?", example_jp:"30分後は何時ですか？" },
+  { id:3, problem_id:"asgn_1785413171201_riw9kj_q3", tags:[], level:"confirmation",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"白いねこがてきとたたかいました。たたかいは午前10時30分にはじまり、午前11時0分におわりました。たたかいにかかった時間は何分ですか。",
+    answer:"30分",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこがてきとたたかいました。たたかいは<ruby>午前<rt>ごぜん</rt></ruby>10<ruby>時<rt>じ</rt></ruby>30<ruby>分<rt>ぷん</rt></ruby>にはじまり、<ruby>午前<rt>ごぜん</rt></ruby>11<ruby>時<rt>じ</rt></ruby>0<ruby>分<rt>ふん</rt></ruby>におわりました。たたかいにかかった<ruby>時間<rt>じかん</rt></ruby>は<ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    vocab_word:"battle", vocab_katakana:"*バ*トル", vocab_meaning:"たたかい",
+    example_en:"How many minutes did the battle take?", example_jp:"たたかいは何分かかりましたか？" },
+  { id:4, problem_id:"asgn_1785413171201_riw9kj_q4", tags:[], level:"confirmation",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"白いねこのボスの1日のよていです。つぎのといに答えなさい。(1)しゅぎょうは午前9時45分にはじまり、午前10時15分におわりました。しゅぎょうの時間は何分ですか。(2)きゅうけいは午前10時15分にはじまり、午前10時45分におわりました。きゅうけいの時間は何分ですか。",
+    answer:"(1)30分 (2)30分",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこのボスの1<ruby>日<rt>にち</rt></ruby>のよていです。つぎのといに<ruby>答<rt>こた</rt></ruby>えなさい。(1)しゅぎょうは<ruby>午前<rt>ごぜん</rt></ruby>9<ruby>時<rt>じ</rt></ruby>45<ruby>分<rt>ぷん</rt></ruby>にはじまり、<ruby>午前<rt>ごぜん</rt></ruby>10<ruby>時<rt>じ</rt></ruby>15<ruby>分<rt>ぷん</rt></ruby>におわりました。しゅぎょうの<ruby>時間<rt>じかん</rt></ruby>は<ruby>何分<rt>なんぷん</rt></ruby>ですか。(2)きゅうけいは<ruby>午前<rt>ごぜん</rt></ruby>10<ruby>時<rt>じ</rt></ruby>15<ruby>分<rt>ぷん</rt></ruby>にはじまり、<ruby>午前<rt>ごぜん</rt></ruby>10<ruby>時<rt>じ</rt></ruby>45<ruby>分<rt>ぷん</rt></ruby>におわりました。きゅうけいの<ruby>時間<rt>じかん</rt></ruby>は<ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    vocab_word:"schedule", vocab_katakana:"*スケ*ジュール", vocab_meaning:"よてい",
+    example_en:"How long is the training time?", example_jp:"しゅぎょうの時間はどれくらいですか？" },
+  { id:5, problem_id:"asgn_1785413171201_riw9kj_q5", tags:[], level:"practice",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"白いねこはしゅぎょうをしています。午前9時にしゅぎょうをはじめて、午後1時におわりました。しゅぎょうにかかった時間は何時間ですか。",
+    answer:"4時間",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこはしゅぎょうをしています。<ruby>午前<rt>ごぜん</rt></ruby>9<ruby>時<rt>じ</rt></ruby>にしゅぎょうをはじめて、<ruby>午後<rt>ごご</rt></ruby>1<ruby>時<rt>じ</rt></ruby>におわりました。しゅぎょうにかかった<ruby>時間<rt>じかん</rt></ruby>は<ruby>何時間<rt>なんじかん</rt></ruby>ですか。</span>),
+    vocab_word:"afternoon", vocab_katakana:"アフタ*ヌー*ン", vocab_meaning:"午後",
+    example_en:"How long did the training take?", example_jp:"しゅぎょうはどれくらいかかりましたか？" },
+  { id:6, problem_id:"asgn_1785413171201_riw9kj_q6", tags:[], level:"example_follow",
+    unit:"長さのはかり方とたんい", chapter:"長さのはかり方とたんい",
+    question:"白いねこのつよさを、長さであらわします。つよさメーターは15cm、はやさメーターは8cmです。(1)2つのメーターをあわせると何cmですか。(2)つよさメーターははやさメーターより何cm長いですか。",
+    answer:"(1)23cm (2)7cm",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこのつよさを、<ruby>長<rt>なが</rt></ruby>さであらわします。つよさメーターは15cm、はやさメーターは8cmです。(1)2つのメーターをあわせると<ruby>何<rt>なん</rt></ruby>cmですか。(2)つよさメーターははやさメーターより<ruby>何<rt>なん</rt></ruby>cm<ruby>長<rt>なが</rt></ruby>いですか。</span>),
+    vocab_word:"length", vocab_katakana:"*レン*グス", vocab_meaning:"長さ",
+    example_en:"What is the total length?", example_jp:"あわせると何cmですか？" },
+  { id:7, problem_id:"asgn_1785413171201_riw9kj_q7", tags:[], level:"confirmation",
+    unit:"長さのはかり方とたんい", chapter:"長さのはかり方とたんい",
+    question:"にゃんこたいせんそうで、ぶきの長さをくらべます。白いねこのツメの長さは24cm、こねこのツメの長さは9cmです。白いねこのツメはこねこのツメより何cm長いですか。",
+    answer:"15cm",
+    jp:(<span>にゃんこたいせんそうで、ぶきの<ruby>長<rt>なが</rt></ruby>さをくらべます。<ruby>白<rt>しろ</rt></ruby>いねこのツメの<ruby>長<rt>なが</rt></ruby>さは24cm、こねこのツメの<ruby>長<rt>なが</rt></ruby>さは9cmです。<ruby>白<rt>しろ</rt></ruby>いねこのツメはこねこのツメより<ruby>何<rt>なん</rt></ruby>cm<ruby>長<rt>なが</rt></ruby>いですか。</span>),
+    vocab_word:"claw", vocab_katakana:"*ク*ロー", vocab_meaning:"ツメ",
+    example_en:"How much longer is the white cat's claw?", example_jp:"白いねこのツメは何cm長いですか？" },
+  { id:8, problem_id:"asgn_1785413171201_riw9kj_q8", tags:[], level:"confirmation",
+    unit:"長さのはかり方とたんい", chapter:"長さのはかり方とたんい",
+    question:"白いねこのしゅぎょうばしょの大きさをはかりました。はばは120cm、おくゆきは150cmです。(1)はばとおくゆきをあわせると何cmですか。(2)おくゆきははばより何cm長いですか。",
+    answer:"(1)270cm (2)30cm",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこのしゅぎょうばしょの<ruby>大<rt>おお</rt></ruby>きさをはかりました。はばは120cm、おくゆきは150cmです。(1)はばとおくゆきをあわせると<ruby>何<rt>なん</rt></ruby>cmですか。(2)おくゆきははばより<ruby>何<rt>なん</rt></ruby>cm<ruby>長<rt>なが</rt></ruby>いですか。</span>),
+    vocab_word:"width", vocab_katakana:"*ウィ*ドス", vocab_meaning:"はば",
+    example_en:"How much longer is the depth than the width?", example_jp:"おくゆきははばより何cm長いですか？" },
+  { id:9, problem_id:"asgn_1785413171201_riw9kj_q9", tags:[], level:"confirmation",
+    unit:"長さのはかり方とたんい", chapter:"長さのはかり方とたんい",
+    question:"白いねこがてきにむかってすすんでいます。てきまでのきょりは45cmです。いま20cmすすみました。てきまで、あと何cmですか。",
+    answer:"25cm",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこがてきにむかってすすんでいます。てきまでのきょりは45cmです。いま20cmすすみました。てきまで、あと<ruby>何<rt>なん</rt></ruby>cmですか。</span>),
+    vocab_word:"distance", vocab_katakana:"*ディ*スタンス", vocab_meaning:"きょり",
+    example_en:"How many centimeters are left to the enemy?", example_jp:"てきまで、あと何cmですか？" },
+  { id:10, problem_id:"asgn_1785413171201_riw9kj_q10", tags:[], level:"practice",
+    unit:"長さのはかり方とたんい", chapter:"長さのはかり方とたんい",
+    question:"白いねこがすすんだみちのりをしらべました。さいしょは60cm、つぎは85cmすすみました。ぜんぶで何cmすすみましたか。",
+    answer:"145cm",
+    jp:(<span><ruby>白<rt>しろ</rt></ruby>いねこがすすんだみちのりをしらべました。さいしょは60cm、つぎは85cmすすみました。ぜんぶで<ruby>何<rt>なん</rt></ruby>cmすすみましたか。</span>),
+    vocab_word:"total", vocab_katakana:"*トー*タル", vocab_meaning:"ぜんぶ",
+    example_en:"How far did the white cat travel?", example_jp:"白いねこはぜんぶで何cmすすみましたか？" }
+];
+
+// SVGイラスト
+const illustrations = {
+  // ▼▼▼ ここに問題ごとのSVGイラストを差し込む ▼▼▼
+  // キー: questions配列の各要素のid（1, 2, 3...）
+  // 値: 72x72程度のオリジナルSVGイラスト（実在キャラクター・著作物の
+  //     再現は禁止。テーマに合わせたオリジナルキャラクター/モチーフのみ）
+  1:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="しゅぎょうする白いねこ"><circle cx="36" cy="36" r="34" fill="#fff3e0"/><circle cx="54" cy="16" r="8" fill="#ffcc80"/><path d="M54 4 v4 M54 24 v4 M44 16 h4 M64 16 h4" stroke="#ffb74d" strokeWidth="2" strokeLinecap="round"/><g transform="translate(30 42) scale(1.5)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/><path d="M-13 -6 h26" stroke="#e53935" strokeWidth="3" strokeLinecap="round"/></g><path d="M52 44 l4 -6 M56 50 l6 -3" stroke="#ffb74d" strokeWidth="2" strokeLinecap="round"/></svg>),
+  2:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="朝のとけいと白いねこ"><circle cx="36" cy="36" r="34" fill="#e3f2fd"/><circle cx="46" cy="26" r="15" fill="#fff" stroke="#1e88e5" strokeWidth="2.5"/><path d="M46 26 L46 17 M46 26 L52 30" stroke="#1e88e5" strokeWidth="2.5" strokeLinecap="round"/><circle cx="46" cy="26" r="1.8" fill="#1e88e5"/><path d="M34 13 l-4 -4 M58 13 l4 -4" stroke="#1e88e5" strokeWidth="2.5" strokeLinecap="round"/><g transform="translate(24 52) scale(1.2)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>),
+  3:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="てきとたたかう白いねこ"><circle cx="36" cy="36" r="34" fill="#fce4ec"/><g transform="translate(20 40) scale(1.3)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g><g transform="translate(54 42) scale(1.2)"><path d="M-9 8 q-3 -14 9 -14 q12 0 9 14 q-4 3 -9 3 q-5 0 -9 -3" fill="#a5d6a7" stroke="#66bb6a" strokeWidth="1.5"/><path d="M-5 -5 l-2 -5 l4 3 z M5 -5 l2 -5 l-4 3 z" fill="#66bb6a"/><circle cx="-3" cy="0" r="1.5" fill="#33691e"/><circle cx="3" cy="0" r="1.5" fill="#33691e"/><path d="M-2 4 h4" stroke="#33691e" strokeWidth="1.2" strokeLinecap="round"/></g><path d="M38 24 l-4 8 h5 l-6 10 2 -7 h-5 z" fill="#ffd54f" stroke="#f57f17" strokeWidth="1" strokeLinejoin="round"/></svg>),
+  4:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="1日のよてい"><circle cx="36" cy="36" r="34" fill="#f3e5f5"/><rect x="26" y="10" width="36" height="46" rx="4" fill="#fff" stroke="#8e24aa" strokeWidth="2"/><rect x="36" y="6" width="16" height="8" rx="2" fill="#ce93d8"/><path d="M31 22 h26 M31 30 h26 M31 38 h20 M31 46 h24" stroke="#ba68c8" strokeWidth="2" strokeLinecap="round"/><g transform="translate(18 52) scale(1.1)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>),
+  5:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="午前から午後へ"><circle cx="36" cy="36" r="34" fill="#fffde7"/><circle cx="18" cy="20" r="8" fill="#fff176" stroke="#fbc02d" strokeWidth="2"/><path d="M18 8 v3 M18 29 v3 M7 20 h3 M26 20 h3" stroke="#fbc02d" strokeWidth="2" strokeLinecap="round"/><path d="M60 14 a8 8 0 1 0 4 14 a10 10 0 0 1 -4 -14" fill="#90caf9" stroke="#42a5f5" strokeWidth="1.5"/><path d="M28 22 q8 -8 22 -4" fill="none" stroke="#bdbdbd" strokeWidth="2" strokeDasharray="4 3" strokeLinecap="round"/><path d="M50 18 l4 1 -3 3 z" fill="#bdbdbd"/><g transform="translate(36 50) scale(1.2)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>),
+  6:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="つよさメーター"><circle cx="36" cy="36" r="34" fill="#e8f5e9"/><rect x="26" y="18" width="38" height="10" rx="5" fill="#fff" stroke="#43a047" strokeWidth="2"/><rect x="28" y="20" width="26" height="6" rx="3" fill="#66bb6a"/><rect x="26" y="36" width="38" height="10" rx="5" fill="#fff" stroke="#fb8c00" strokeWidth="2"/><rect x="28" y="38" width="15" height="6" rx="3" fill="#ffa726"/><g transform="translate(16 46) scale(1.1)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>),
+  7:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ツメとものさし"><circle cx="36" cy="36" r="34" fill="#fff8e1"/><circle cx="44" cy="30" r="14" fill="#fff" stroke="#90a4ae" strokeWidth="2"/><circle cx="38" cy="26" r="3" fill="#f8bbd0"/><circle cx="46" cy="23" r="2.5" fill="#f8bbd0"/><circle cx="52" cy="27" r="2.5" fill="#f8bbd0"/><ellipse cx="45" cy="34" rx="5" ry="4" fill="#f8bbd0"/><path d="M35 15 l-3 -6 M45 12 l0 -7 M54 15 l3 -6" stroke="#78909c" strokeWidth="2.5" strokeLinecap="round"/><rect x="12" y="50" width="48" height="10" rx="2" fill="#fff59d" stroke="#f9a825" strokeWidth="2"/><path d="M20 50 v4 M28 50 v4 M36 50 v4 M44 50 v4 M52 50 v4" stroke="#f57f17" strokeWidth="1.5"/></svg>),
+  8:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="しゅぎょうばしょの大きさ"><circle cx="36" cy="36" r="34" fill="#e0f2f1"/><rect x="16" y="22" width="40" height="28" rx="3" fill="#b2dfdb" stroke="#00897b" strokeWidth="2"/><path d="M16 16 h40" stroke="#00897b" strokeWidth="1.5"/><path d="M16 13 v6 M56 13 v6" stroke="#00897b" strokeWidth="1.5"/><path d="M62 22 v28" stroke="#00897b" strokeWidth="1.5"/><path d="M59 22 h6 M59 50 h6" stroke="#00897b" strokeWidth="1.5"/><g transform="translate(36 38) scale(1)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>),
+  9:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="てきまでのきょり"><circle cx="36" cy="36" r="34" fill="#ede7f6"/><g transform="translate(16 34) scale(1.1)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g><g transform="translate(56 36) scale(1.1)"><path d="M-9 8 q-3 -14 9 -14 q12 0 9 14 q-4 3 -9 3 q-5 0 -9 -3" fill="#a5d6a7" stroke="#66bb6a" strokeWidth="1.5"/><path d="M-5 -5 l-2 -5 l4 3 z M5 -5 l2 -5 l-4 3 z" fill="#66bb6a"/><circle cx="-3" cy="0" r="1.5" fill="#33691e"/><circle cx="3" cy="0" r="1.5" fill="#33691e"/><path d="M-2 4 h4" stroke="#33691e" strokeWidth="1.2" strokeLinecap="round"/></g><path d="M28 52 h28" stroke="#7e57c2" strokeWidth="2.5" strokeLinecap="round"/><path d="M28 52 l5 -3 v6 z M56 52 l-5 -3 v6 z" fill="#7e57c2"/></svg>),
+  10:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="すすんだみちのり"><circle cx="36" cy="36" r="34" fill="#fbe9e7"/><path d="M8 56 Q 24 48 36 40" fill="none" stroke="#ffab91" strokeWidth="7" strokeLinecap="round"/><path d="M36 40 Q 50 30 62 18" fill="none" stroke="#ff8a65" strokeWidth="7" strokeLinecap="round"/><circle cx="36" cy="40" r="3.5" fill="#fff" stroke="#d84315" strokeWidth="2"/><rect x="59" y="6" width="2.5" height="14" fill="#8d6e63"/><path d="M61.5 6 l9 3 -9 3 z" fill="#ef5350"/><g transform="translate(16 30) scale(1)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#90a4ae" strokeWidth="1.5"/><path d="M-11 -7 L-14 -16 L-5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 -7 L14 -16 L5 -11 z" fill="#fff" stroke="#90a4ae" strokeWidth="1.5" strokeLinejoin="round"/><path d="M-10.5 -8.5 L-12 -13.5 L-7.5 -10.5 z" fill="#f8bbd0"/><path d="M10.5 -8.5 L12 -13.5 L7.5 -10.5 z" fill="#f8bbd0"/><circle cx="-4.5" cy="-2" r="1.6" fill="#37474f"/><circle cx="4.5" cy="-2" r="1.6" fill="#37474f"/><path d="M-1.5 2 q1.5 1.5 3 0" stroke="#37474f" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M-13 0 h-5 M-13 3 h-4 M13 0 h5 M13 3 h4" stroke="#b0bec5" strokeWidth="1" strokeLinecap="round"/><path d="M-9 9 q9 5 18 0 l-1.5 4 q-7.5 3.5 -15 0 z" fill="#42a5f5" stroke="#1e88e5" strokeWidth="1"/></g></svg>)
+};
+
+// DrawCanvas（式・答え・なまえの手書きキャンバス）は本HTMLでは削除。
+// 生徒は式と答えを紙の解答用紙に手書きする（このページは閲覧専用・送信なし）。
+
+function App() {
+  const [showEnglish, setShowEnglish] = React.useState({});
+  const [quizAnswers, setQuizAnswers] = React.useState({});
+  const [speaking, setSpeaking] = React.useState(null);
+
+  const speak=(text,lang="ja-JP")=>{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang;
+    u.rate=0.8;
+    if(lang.startsWith("en")){
+      const FEMALE_HINTS=["Samantha","Female","Google US English","Victoria","Karen","Moira","Tessa","Fiona","Zira","Susan","Allison","Ava"];
+      const voices=window.speechSynthesis.getVoices()||[];
+      const enVoices=voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith("en")&&v.name!=="Kyoko");
+      const femaleVoice=enVoices.find(v=>FEMALE_HINTS.some(h=>v.name.includes(h)))
+        || enVoices.find(v=>/female/i.test(v.name));
+      if(femaleVoice) u.voice=femaleVoice; // 見つからなければブラウザのデフォルト音声にフォールバック
+    }
+    setSpeaking(text);
+    u.onend=()=>setSpeaking(null);
+    window.speechSynthesis.speak(u);
+  };
+
+  // 単語クイズ用データ（questionsの vocab_word/vocab_meaning から自動生成、3択）
+  const vocabQuiz = React.useMemo(()=>{
+    const withVocab = questions.filter(q=>q.vocab_word&&q.vocab_meaning);
+    return withVocab.map(q=>{
+      const distractors = withVocab
+        .filter(o=>o.id!==q.id && o.vocab_word!==q.vocab_word)
+        .map(o=>o.vocab_word)
+        .sort(()=>Math.random()-0.5)
+        .slice(0,2);
+      const choices = [...distractors, q.vocab_word].sort(()=>Math.random()-0.5);
+      return { id:q.id, meaning:q.vocab_meaning, correct:q.vocab_word, choices };
+    });
+  },[]);
+  const handleQuizAnswer=(id,choice)=>{
+    if(quizAnswers[id])return;
+    setQuizAnswers(prev=>({...prev,[id]:choice}));
+  };
+  const quizCorrectCount = vocabQuiz.filter(v=>quizAnswers[v.id]===v.correct).length;
+
+  // Supabase送信ロジック・提出完了ビューは本HTMLでは完全に削除（このページはデータを一切送信しない）
+
+  return (
+    <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:100,overflowX:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",padding:"16px 16px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 10px rgba(0,0,0,0.2)"}}>
+        <h1 style={{fontSize:16,fontWeight:"bold",margin:"0 0 3px 0"}}>{QUIZ_META.theme_icon||"📘"} {QUIZ_META.theme_title||"算数で日本語を学ぼう！"}</h1>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {QUIZ_META.theme_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.theme_label}</span>}
+          {QUIZ_META.grade_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.grade_label}</span>}
+          <span style={{background:"rgba(255,255,255,0.15)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{questions.length}問</span>
+        </div>
+      </div>
+
+      <div style={{padding:"12px"}}>
+        <div style={{background:"#e1f5fe",borderRadius:14,marginBottom:14,border:"2px solid #1a9fd4",padding:"12px 14px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+          <p style={{fontSize:13,fontWeight:"bold",color:"#0277bd",margin:0,lineHeight:1.8}}>📄 なまえ・<ruby>式<rt>しき</rt></ruby>・<ruby>答<rt>こた</rt></ruby>えは、くばられた<ruby>解答用紙<rt>かいとうようし</rt></ruby>に<ruby>書<rt>か</rt></ruby>いてね！<br/><span style={{fontWeight:"normal",fontSize:12,color:"#0288d1"}}>Read the questions here, and write your name and answers on your paper answer sheet.</span></p>
+        </div>
+
+        {questions.map((q,idx)=>{
+          const lb=LEVEL_BADGE[q.level]||{label:q.level,color:"#888",bg:"#f5f5f5"};
+          const uc=UNIT_COLORS[q.unit]||{color:"#555",bg:"#f5f5f5"};
+          return (
+            <div key={q.id} id={'q-'+q.id} style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #dde3f0",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+              <div style={{background:"linear-gradient(90deg,#1a9fd4,#0277bd)",padding:"8px 14px",display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                <span style={{background:"white",color:"#0277bd",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                <span style={{background:uc.bg,color:uc.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{q.unit}</span>
+                <span style={{background:lb.bg,color:lb.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{lb.label}</span>
+              </div>
+
+              <div style={{padding:"14px 12px"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                  <div style={{flexShrink:0}}>{illustrations[q.id]}</div>
+                  <p style={{fontSize:15,lineHeight:2.1,color:"#1a1a1a",fontWeight:"500",margin:0,wordBreak:"break-word"}}>{q.jp}</p>
+                </div>
+
+                <div style={{marginTop:10,background:"#fff8e1",border:"2px dashed #f9a825",borderRadius:10,padding:"10px 12px",display:"flex",gap:8,alignItems:"center"}}>
+                  <span style={{fontSize:20,flexShrink:0}}>✏️</span>
+                  <p style={{fontSize:13,fontWeight:"bold",color:"#8d6e63",margin:0,lineHeight:1.7}}><ruby>式<rt>しき</rt></ruby>と<ruby>答<rt>こた</rt></ruby>えは<ruby>解答用紙<rt>かいとうようし</rt></ruby>に<ruby>書<rt>か</rt></ruby>いてね<br/><span style={{fontWeight:"normal",fontSize:11.5,color:"#a1887f"}}>Write your equation and answer on your answer sheet!</span></p>
+                </div>
+
+                <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
+                  <button onClick={()=>setShowEnglish(p=>({...p,[q.id]:!p[q.id]}))}
+                    style={{background:showEnglish[q.id]?"#e8f5e9":"#f5f5f5",border:`1px solid ${showEnglish[q.id]?"#43a047":"#ddd"}`,color:showEnglish[q.id]?"#2e7d32":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                    🌍 +English
+                  </button>
+                  <button onClick={()=>{
+                    if(idx < questions.length-1){
+                      const next=document.getElementById('q-'+questions[idx+1].id);
+                      if(next) next.scrollIntoView({behavior:'smooth',block:'start'});
+                    } else {
+                      const quizEl=document.getElementById('vocab-quiz-section');
+                      if(quizEl) quizEl.scrollIntoView({behavior:'smooth',block:'start'});
+                    }
+                  }} style={{marginLeft:"auto",background:idx < questions.length-1?"#1a9fd4":"#e53935",color:"white",border:"none",padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:"bold",cursor:"pointer",boxShadow:"0 2px 6px rgba(0,0,0,0.2)"}}>
+                    {idx < questions.length-1 ? "次の問題へ ▼" : "単語クイズへ ▼"}
+                  </button>
+                </div>
+              </div>
+
+              {showEnglish[q.id]&&(
+                <div style={{borderTop:"1px solid #e8f5e9",background:"#f1f8f1",padding:"12px"}}>
+                  <p style={{fontSize:11,color:"#2e7d32",fontWeight:"bold",margin:"0 0 8px 0"}}>📖 今日の単語</p>
+                  <div style={{background:"white",border:"1px solid #c8e6c9",borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                    <p style={{fontSize:20,fontWeight:"bold",color:"#333",margin:"0 0 2px 0"}}>{q.vocab_word}</p>
+                    <p style={{fontSize:14,color:"#555",margin:"0 0 4px 0"}}>{renderAccent(q.vocab_katakana)}</p>
+                    <p style={{fontSize:13,color:"#1a73e8",margin:"0 0 6px 0"}}>🇯🇵 {q.vocab_meaning}</p>
+                    <button onClick={()=>speak(q.vocab_word,"en-US")}
+                      style={{background:speaking===q.vocab_word?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.vocab_word?"#1a9fd4":"#ddd"}`,color:speaking===q.vocab_word?"#1a9fd4":"#666",padding:"4px 10px",borderRadius:8,fontSize:11,cursor:"pointer"}}>
+                      {speaking===q.vocab_word?"🔊 Playing...":"🔊 単語を聞く"}
+                    </button>
+                  </div>
+                  <div style={{borderTop:"1px dashed #a5d6a7",margin:"8px 0"}}/>
+                  <div style={{background:"white",border:"1px solid #c8e6c9",borderRadius:10,padding:"10px 12px"}}>
+                    <p style={{fontSize:14,color:"#333",margin:"0 0 4px 0",fontStyle:"italic"}}>{q.example_en}</p>
+                    <p style={{fontSize:12,color:"#888",margin:"0 0 6px 0"}}>{q.example_jp}</p>
+                    <button onClick={()=>speak(q.example_en,"en-US")}
+                      style={{background:speaking===q.example_en?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.example_en?"#1a9fd4":"#ddd"}`,color:speaking===q.example_en?"#1a9fd4":"#666",padding:"4px 10px",borderRadius:8,fontSize:11,cursor:"pointer"}}>
+                      {speaking===q.example_en?"🔊 Playing...":"🔊 例文を聞く"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          );
+        })}
+
+        {/* 単語クイズ */}
+        <div id="vocab-quiz-section" style={{background:"linear-gradient(135deg,#7b1fa2,#4a148c)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <h2 style={{color:"white",fontSize:16,fontWeight:"bold",margin:"0 0 2px 0"}}>🧩 単語クイズ / Vocabulary Quiz</h2>
+          <p style={{color:"rgba(255,255,255,0.8)",fontSize:12,margin:0}}>日本語の意味に合う英単語を選ぼう！</p>
+        </div>
+
+        <div style={{background:"white",borderRadius:14,marginBottom:14,padding:"10px 12px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)",border:"2px solid #e1bee7"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,padding:"0 4px"}}>
+            <p style={{fontSize:14,fontWeight:"bold",color:"#7b1fa2",margin:0}}>📝 単語クイズ</p>
+            <span style={{background:"#7b1fa2",color:"white",borderRadius:20,padding:"3px 12px",fontSize:13,fontWeight:"bold"}}>{quizCorrectCount} / {vocabQuiz.length}</span>
+          </div>
+          {vocabQuiz.map((v,i)=>{
+            const answered=quizAnswers[v.id];
+            return (
+              <div key={v.id} style={{padding:"8px 4px",borderBottom:i<vocabQuiz.length-1?"1px solid #f3e5f5":"none"}}>
+                <span style={{display:"block",fontSize:13,fontWeight:"bold",color:"#4a148c",marginBottom:6}}>{v.meaning}</span>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                  {v.choices.map(choice=>{
+                    const isSelected=answered===choice;
+                    const isCorrectChoice=choice===v.correct;
+                    let bg="#f5f5f5",border="1px solid #ddd",color="#333";
+                    if(answered){
+                      if(isCorrectChoice){bg="#e8f5e9";border="1px solid #43a047";color="#2e7d32";}
+                      else if(isSelected){bg="#ffebee";border="1px solid #e53935";color="#c62828";}
+                    }
+                    return <button key={choice} onClick={()=>handleQuizAnswer(v.id,choice)} disabled={!!answered}
+                      style={{flex:"1 1 auto",background:bg,border,color,padding:"6px 10px",borderRadius:8,fontSize:12,fontWeight:"bold",cursor:answered?"default":"pointer"}}>
+                      {choice}
+                    </button>;
+                  })}
+                </div>
+                {answered && (answered===v.correct
+                  ? <p style={{fontSize:12,fontWeight:"bold",color:"#2e7d32",margin:"6px 0 0"}}>✓ 正解！</p>
+                  : <p style={{fontSize:12,fontWeight:"bold",color:"#c62828",margin:"6px 0 0"}}>✗ 不正解（正解: {v.correct}）</p>
+                )}
+              </div>
+            );
+          })}
+          {vocabQuiz.length>0 && quizCorrectCount===vocabQuiz.length && <p style={{textAlign:"center",fontSize:15,fontWeight:"bold",color:"#43a047",marginTop:10}}>🎉 全問正解！Perfect!</p>}
+        </div>
+
+        <div style={{background:"#e8f5e9",border:"2px solid #66bb6a",borderRadius:14,padding:"14px 16px",textAlign:"center"}}>
+          <p style={{fontSize:14,fontWeight:"bold",color:"#2e7d32",margin:0,lineHeight:1.8}}>🎉 おつかれさま！<ruby>解答用紙<rt>かいとうようし</rt></ruby>を<ruby>先生<rt>せんせい</rt></ruby>にわたしてね<br/><span style={{fontWeight:"normal",fontSize:12,color:"#43a047"}}>All done! Hand your answer sheet to your teacher. (このページからは何も送信されません)</span></p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+</script>
+</body>
+</html>
