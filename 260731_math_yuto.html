@@ -1,0 +1,378 @@
+<!--
+  ═══════════════════════════════════════════════════════════════
+  student_quiz テンプレート（海外向け・日本語学習者用）
+  ═══════════════════════════════════════════════════════════════
+  出典: student_quiz_doraemon_overseas.html の骨格部分のみを抽出
+  （採点モード ?teacher=1 機能は不使用のため削除済み、2026-07-02）
+
+  【使い方】このHTMLの{{...}}プレースホルダーを埋めて生成する：
+    ドラえもんと宇宙チェス算数！（小2・N4・10問）    - <title>タグの中身
+    {{QUIZ_META}}      - const QUIZ_META = {...}; の定義
+    {{KANJI_QUIZ}}      - kanjiQuiz配列の中身（無ければ空のまま）
+    {{QUESTIONS}}       - questions配列の中身
+    {{ILLUSTRATIONS}}   - illustrationsオブジェクトの中身
+
+  【著作権注意】illustrations・questionsに実在の著作物
+  （アニメ・ゲーム・企業キャラクター等）は使用しないこと。
+  テーマに寄せたオリジナルキャラクター・モチーフのみ可。
+
+  【骨格に含まれる主な機能】
+  - DrawCanvas: ペン/消しゴム/全消去、canvas解像度1200x{height}固定
+    （幅を変えると採点UI側で歪んで表示されるので変更しないこと）
+  - +Englishパネル（単語・例文・音声読み上げ）
+  - 漢字クイズ（選択式、kanjiQuiz空なら非表示）
+  - Supabase送信: student_id/student_name の両方を必ず含める
+    （どちらか欠けると採点UI側で表示が壊れる）
+  ═══════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ドラえもんと宇宙チェス算数！（小2・N4・10問）</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4ff; font-family: 'Hiragino Sans','Yu Gothic',sans-serif; }
+    ruby { ruby-align: center; }
+    rt { font-size: 10px; color: #888; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ▼▼▼ QUIZ_META をここに定義する（Pandora側で埋め込む） ▼▼▼
+// 例: const QUIZ_META = {
+//   assignment_id: "asgn_xxxx", mode: "overseas", grades: ["g04"],
+//   jp_level: "N4", theme_title: "算数で日本語を学ぼう！",
+//   theme_label: "テーマ名", theme_icon: "🔵", grade_label: "小4",
+//   student_name: "阿部 優子"  // 生徒を選んで生成した場合のみ
+// };
+const QUIZ_META = {
+  assignment_id: "asgn_1785476202906_5t07jd",
+  mode: "overseas",
+  grades: ["g02"],
+  jp_level: "N4",
+  theme_title: "ドラえもんと宇宙チェス算数！",
+  theme_label: "チェス×宇宙",
+  theme_icon: "🚀",
+  grade_label: "小2",
+  student_name: "高橋 悠翔"
+};
+
+const kanjiQuiz = [
+  // ▼▼▼ 漢字クイズがある場合はここに差し込む（無ければ空配列のまま） ▼▼▼
+  // 形式: { id, reading, en, correct, choices:[...], hint }
+  { id:"k1", reading:"うちゅう", en:"space, universe", correct:"宇宙", choices:["宇宙","字宙","宇由"], hint:"Two characters for outer space" },
+  { id:"k2", reading:"さんか", en:"participate, join", correct:"参加", choices:["参加","三加","参可"], hint:"Join or take part in something" },
+  { id:"k3", reading:"しあい", en:"match, game, competition", correct:"試合", choices:["試合","試会","詩合"], hint:"A competition or sports event" }
+];
+
+function KanjiIllustration({id}) {
+  if(id==="k1") return <svg viewBox="0 0 80 60" width="80" height="60"><circle cx="40" cy="25" r="18" fill="#1a9fd4"/><circle cx="40" cy="23" r="14" fill="#f5f5f5"/><circle cx="35" cy="19" r="3" fill="white"/><circle cx="35" cy="19" r="1.8" fill="#111"/><circle cx="45" cy="19" r="3" fill="white"/><circle cx="45" cy="19" r="1.8" fill="#111"/><ellipse cx="40" cy="25" rx="4" ry="3" fill="#e53935"/><ellipse cx="40" cy="38" rx="12" ry="7" fill="#1a9fd4"/></svg>;
+  if(id==="k2") return <svg viewBox="0 0 80 60" width="80" height="60"><ellipse cx="25" cy="30" rx="12" ry="14" fill="#f5c5a3"/><rect x="19" y="24" width="6" height="5" rx="1.5" fill="white" stroke="#555" strokeWidth="1"/><rect x="27" y="24" width="6" height="5" rx="1.5" fill="white" stroke="#555" strokeWidth="1"/><circle cx="22" cy="26.5" r="1.5" fill="#333"/><circle cx="30" cy="26.5" r="1.5" fill="#333"/><rect x="17" y="42" width="16" height="10" rx="3" fill="#ff9800"/><text x="58" y="32" textAnchor="middle" fontSize="16" fill="#1a9fd4" fontWeight="bold">×3</text></svg>;
+  return <svg viewBox="0 0 80 60" width="80" height="60"><rect x="10" y="8" width="60" height="40" rx="6" fill="#37474f"/><rect x="14" y="12" width="52" height="14" rx="3" fill="#b2dfdb"/><text x="40" y="23" textAnchor="middle" fontSize="10" fill="#004d40" fontWeight="bold">計算</text><rect x="14" y="28" width="52" height="12" rx="3" fill="#546e7a"/><text x="40" y="37" textAnchor="middle" fontSize="9" fill="white">= ?</text></svg>;
+}
+
+const LEVEL_BADGE = {
+  example_follow: { label:"例題", color:"#7b1fa2", bg:"#f3e5f5" },
+  confirmation:   { label:"確認", color:"#1a9fd4", bg:"#e1f5fe" },
+  practice:       { label:"練習", color:"#e65100", bg:"#fff3e0" },
+};
+const UNIT_COLORS = {
+  "整数のわり算": { color:"#1a73e8", bg:"#e8f0fe" },
+  "式と計算":     { color:"#2e7d32", bg:"#e8f5e9" },
+};
+
+const questions = [
+  // ▼▼▼ ここに問題データを差し込む ▼▼▼
+  // 各要素の形式: { id, problem_id, tags:[], question, unit, chapter, level,
+  //   jp:<span>ふりがな付きJSX</span>, reading:"ひらがな全文",
+  //   answer, hint, words:[{word,meaning,example}, ...] }
+  // level は 'example_follow' | 'confirmation' | 'practice' のいずれか
+  { id:1, problem_id:"asgn_1785476202906_5t07jd_q1", tags:[], level:"example_follow",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"ドラえもんが宇宙へ旅に出ました。1時間は何分ですか。",
+    answer:"60分",
+    jp:(<span>ドラえもんが<ruby>宇宙<rt>うちゅう</rt></ruby>へ<ruby>旅<rt>たび</rt></ruby>に<ruby>出<rt>で</rt></ruby>ました。1<ruby>時間<rt>じかん</rt></ruby>は<ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    reading:"どらえもんがうちゅうへたびにでました。1じかんはなんぷんですか。",
+    hint:"Remember: 1 hour = 60 minutes. How many minutes is 1 hour?",
+    words:[{word:"宇宙",meaning:"space, universe",example:"宇宙ステーションへ行く"},{word:"旅",meaning:"journey, trip",example:"宇宙への旅"}] },
+  { id:2, problem_id:"asgn_1785476202906_5t07jd_q2", tags:[], level:"confirmation",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"ドラえもんがチェス大会に参加します。大会は8時40分に始まり、10時10分に終わりました。大会の時間はどれだけですか。",
+    answer:"1時間30分",
+    jp:(<span>ドラえもんがチェス<ruby>大会<rt>たいかい</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>します。<ruby>大会<rt>たいかい</rt></ruby>は8<ruby>時<rt>じ</rt></ruby>40<ruby>分<rt>ぷん</rt></ruby>に<ruby>始<rt>はじ</rt></ruby>まり、10<ruby>時<rt>じ</rt></ruby>10<ruby>分<rt>ぷん</rt></ruby>に<ruby>終<rt>お</rt></ruby>わりました。<ruby>大会<rt>たいかい</rt></ruby>の<ruby>時間<rt>じかん</rt></ruby>はどれだけですか。</span>),
+    reading:"どらえもんがちぇすたいかいにさんかします。たいかいは8じ40ぷんにはじまり、10じ10ぷんにおわりました。たいかいのじかんはどれだけですか。",
+    hint:"Find how long the tournament lasted, from 8:40 to 10:10.",
+    words:[{word:"参加",meaning:"participate, join",example:"チェス大会に参加する"},{word:"始まる",meaning:"start, begin",example:"大会が始まる"}] },
+  { id:3, problem_id:"asgn_1785476202906_5t07jd_q3", tags:[], level:"confirmation",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"ドラえもんはチェスの試合に2時間20分かかりました。2時間20分は何分ですか。",
+    answer:"140分",
+    jp:(<span>ドラえもんはチェスの<ruby>試合<rt>しあい</rt></ruby>に2<ruby>時間<rt>じかん</rt></ruby>20<ruby>分<rt>ぷん</rt></ruby>かかりました。2<ruby>時間<rt>じかん</rt></ruby>20<ruby>分<rt>ぷん</rt></ruby>は<ruby>何分<rt>なんぷん</rt></ruby>ですか。</span>),
+    reading:"どらえもんはちぇすのしあいに2じかん20ぷんかかりました。2じかん20ぷんはなんぷんですか。",
+    hint:"Convert 2 hours 20 minutes into minutes. 1 hour = 60 minutes.",
+    words:[{word:"試合",meaning:"match, game",example:"チェスの試合"},{word:"かかる",meaning:"take (time)",example:"時間がかかる"}] },
+  { id:4, problem_id:"asgn_1785476202906_5t07jd_q4", tags:[], level:"practice",
+    unit:"時こくと時間②", chapter:"時こくと時間②",
+    question:"ドラえもんが午前9時30分に宇宙旅行へ出発しました。4時間50分後に到着しました。到着した時こくは何時何分ですか。",
+    answer:"午後2時20分",
+    jp:(<span>ドラえもんが<ruby>午前<rt>ごぜん</rt></ruby>9<ruby>時<rt>じ</rt></ruby>30<ruby>分<rt>ぷん</rt></ruby>に<ruby>宇宙旅行<rt>うちゅうりょこう</rt></ruby>へ<ruby>出発<rt>しゅっぱつ</rt></ruby>しました。4<ruby>時間<rt>じかん</rt></ruby>50<ruby>分<rt>ぷん</rt></ruby><ruby>後<rt>ご</rt></ruby>に<ruby>到着<rt>とうちゃく</rt></ruby>しました。<ruby>到着<rt>とうちゃく</rt></ruby>した<ruby>時<rt>と</rt></ruby>こくは<ruby>何時何分<rt>なんじなんぷん</rt></ruby>ですか。</span>),
+    reading:"どらえもんがごぜん9じ30ぷんにうちゅうりょこうへしゅっぱつしました。4じかん50ぷんごにとうちゃくしました。とうちゃくしたときこくはなんじなんぷんですか。",
+    hint:"Add 4 hours 50 minutes to 9:30 in the morning. Watch the hour carry!",
+    words:[{word:"到着",meaning:"arrival",example:"駅に到着する"},{word:"出発",meaning:"departure, leave",example:"旅に出発する"}] },
+  { id:5, problem_id:"asgn_1785476202906_5t07jd_q5", tags:[], level:"example_follow",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"次の計算をしなさい。(1)5cm＋2cm＝□ (2)6cm5mm＋3cm＝□ (3)9cm5mm－7cm＝□",
+    answer:"(1)7cm (2)9cm5mm (3)2cm5mm",
+    jp:(<span><ruby>次<rt>つぎ</rt></ruby>の<ruby>計算<rt>けいさん</rt></ruby>をしなさい。(1)5cm＋2cm＝□ (2)6cm5mm＋3cm＝□ (3)9cm5mm－7cm＝□</span>),
+    reading:"つぎのけいさんをしなさい。(1)5せんちめーとる たす 2せんちめーとる (2)6せんちめーとる5みりめーとる たす 3せんちめーとる (3)9せんちめーとる5みりめーとる ひく 7せんちめーとる",
+    hint:"Calculate length addition and subtraction. Add cm with cm, mm with mm.",
+    words:[{word:"計算",meaning:"calculation, compute",example:"長さを計算する"},{word:"長さ",meaning:"length, distance",example:"棒の長さを測る"}] },
+  { id:6, problem_id:"asgn_1785476202906_5t07jd_q6", tags:[], level:"confirmation",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"ドラえもんがチェスボードのよこの長さを計算します。式をかいて答えなさい。8cm3mm＋4cm2mm＝□",
+    answer:"12cm5mm",
+    jp:(<span>ドラえもんがチェスボードのよこの<ruby>長<rt>なが</rt></ruby>さを<ruby>計算<rt>けいさん</rt></ruby>します。<ruby>式<rt>しき</rt></ruby>をかいて<ruby>答<rt>こた</rt></ruby>えなさい。8cm3mm＋4cm2mm＝□</span>),
+    reading:"どらえもんがちぇすぼーどのよこのながさをけいさんします。しきをかいてこたえなさい。8せんちめーとる3みりめーとる たす 4せんちめーとる2みりめーとる",
+    hint:"Write the equation and calculate the total length.",
+    words:[{word:"よこ",meaning:"width, horizontal",example:"よこの長さをはかる"},{word:"式",meaning:"equation, formula",example:"計算式をかく"}] },
+  { id:7, problem_id:"asgn_1785476202906_5t07jd_q7", tags:[], level:"confirmation",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"ロケットから宇宙基地までの距離を計算します。式をかいて答えなさい。12cm7mm－5cm3mm＝□",
+    answer:"7cm4mm",
+    jp:(<span>ロケットから<ruby>宇宙<rt>うちゅう</rt></ruby><ruby>基地<rt>きち</rt></ruby>までの<ruby>距離<rt>きょり</rt></ruby>を<ruby>計算<rt>けいさん</rt></ruby>します。<ruby>式<rt>しき</rt></ruby>をかいて<ruby>答<rt>こた</rt></ruby>えなさい。12cm7mm－5cm3mm＝□</span>),
+    reading:"ろけっとからうちゅうきちまでのきょりをけいさんします。しきをかいてこたえなさい。12せんちめーとる7みりめーとる ひく 5せんちめーとる3みりめーとる",
+    hint:"Subtract the lengths using the equation.",
+    words:[{word:"距離",meaning:"distance",example:"ここから駅までの距離"},{word:"基地",meaning:"base, station",example:"宇宙基地"}] },
+  { id:8, problem_id:"asgn_1785476202906_5t07jd_q8", tags:[], level:"practice",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"ドラえもんのチェスのこま1この高さは3cm2mmです。こまを2こかさねると、ぜんぶでどのくらいの高さになりますか。式をかいて答えなさい。",
+    answer:"6cm4mm",
+    jp:(<span>ドラえもんのチェスのこま1この<ruby>高<rt>たか</rt></ruby>さは3cm2mmです。こまを2こかさねると、ぜんぶでどのくらいの<ruby>高<rt>たか</rt></ruby>さになりますか。<ruby>式<rt>しき</rt></ruby>をかいて<ruby>答<rt>こた</rt></ruby>えなさい。</span>),
+    reading:"どらえもんのちぇすのこま1このたかさは3せんちめーとる2みりめーとるです。こまを2こかさねると、ぜんぶでどのくらいのたかさになりますか。しきをかいてこたえなさい。",
+    hint:"Add the height of two chess pieces stacked together.",
+    words:[{word:"高さ",meaning:"height, tall",example:"つくえの高さをはかる"},{word:"かさねる",meaning:"stack, pile up",example:"本をかさねる"}] },
+  { id:9, problem_id:"asgn_1785476202906_5t07jd_q9", tags:[], level:"practice",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"チェス大会で、白いこまの道の長さが15cm6mmで、黒いこまの道の長さが9cm4mmです。白いこまの道のほうが、黒いこまの道より何cm何mm長いですか。式をかいて答えなさい。",
+    answer:"6cm2mm",
+    jp:(<span>チェス<ruby>大会<rt>たいかい</rt></ruby>で、<ruby>白<rt>しろ</rt></ruby>いこまの<ruby>道<rt>みち</rt></ruby>の<ruby>長<rt>なが</rt></ruby>さが15cm6mmで、<ruby>黒<rt>くろ</rt></ruby>いこまの<ruby>道<rt>みち</rt></ruby>の<ruby>長<rt>なが</rt></ruby>さが9cm4mmです。<ruby>白<rt>しろ</rt></ruby>いこまの<ruby>道<rt>みち</rt></ruby>のほうが、<ruby>黒<rt>くろ</rt></ruby>いこまの<ruby>道<rt>みち</rt></ruby>より<ruby>何<rt>なん</rt></ruby>cm<ruby>何<rt>なん</rt></ruby>mm<ruby>長<rt>なが</rt></ruby>いですか。<ruby>式<rt>しき</rt></ruby>をかいて<ruby>答<rt>こた</rt></ruby>えなさい。</span>),
+    reading:"ちぇすたいかいで、しろいこまのみちのながさが15せんちめーとる6みりめーとるで、くろいこまのみちのながさが9せんちめーとる4みりめーとるです。しろいこまのみちのほうが、くろいこまのみちよりなんせんちなんみりながいですか。しきをかいてこたえなさい。",
+    hint:"Find the difference in length in cm and mm.",
+    words:[{word:"こま",meaning:"chess piece, game piece",example:"チェスのこまを動かす"},{word:"道",meaning:"path, way, road",example:"こまの道"}] },
+  { id:10, problem_id:"asgn_1785476202906_5t07jd_q10", tags:[], level:"practice",
+    unit:"長さの計算", chapter:"長さの計算",
+    question:"ドラえもんが3本のチェスボードのわくをならべます。1本のわくが24cm5mmです。3本ぜんぶの長さは何cm何mmになりますか。式をかいて答えなさい。",
+    answer:"73cm5mm",
+    jp:(<span>ドラえもんが3<ruby>本<rt>ほん</rt></ruby>のチェスボードのわくをならべます。1<ruby>本<rt>ほん</rt></ruby>のわくが24cm5mmです。3<ruby>本<rt>ほん</rt></ruby>ぜんぶの<ruby>長<rt>なが</rt></ruby>さは<ruby>何<rt>なん</rt></ruby>cm<ruby>何<rt>なん</rt></ruby>mmになりますか。<ruby>式<rt>しき</rt></ruby>をかいて<ruby>答<rt>こた</rt></ruby>えなさい。</span>),
+    reading:"どらえもんが3ぼんのちぇすぼーどのわくをならべます。1ぽんのわくが24せんちめーとる5みりめーとるです。3ぼんぜんぶのながさはなんせんちなんみりになりますか。しきをかいてこたえなさい。",
+    hint:"Add three chess board frames of 24cm5mm to find the total length.",
+    words:[{word:"ならべる",meaning:"arrange, line up",example:"こまをならべる"},{word:"ぜんぶ",meaning:"all, total",example:"ぜんぶの長さ"}] }
+];
+
+// SVGイラスト
+const illustrations = {
+  // ▼▼▼ ここに問題ごとのSVGイラストを差し込む ▼▼▼
+  // キー: questions配列の各要素のid（1, 2, 3...）
+  // 値: 72x72程度のオリジナルSVGイラスト（実在キャラクター・著作物の
+  //     再現は禁止。テーマに合わせたオリジナルキャラクター/モチーフのみ）
+  1:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="宇宙への旅"><circle cx="36" cy="36" r="34" fill="#1a237e"/><circle cx="14" cy="16" r="1.5" fill="#ffd54f"/><circle cx="58" cy="12" r="1.2" fill="#ffd54f"/><circle cx="62" cy="40" r="1.5" fill="#ffd54f"/><circle cx="12" cy="48" r="1.2" fill="#ffd54f"/><circle cx="50" cy="60" r="1.2" fill="#ffd54f"/><g transform="rotate(-30 40 36)"><path d="M40 14 q8 10 8 24 h-16 q0 -14 8 -24" fill="#eceff1" stroke="#90a4ae" strokeWidth="1.5"/><circle cx="40" cy="30" r="4" fill="#4fc3f7" stroke="#0288d1" strokeWidth="1.5"/><path d="M32 34 l-5 8 5 -2 z M48 34 l5 8 -5 -2 z" fill="#ef5350"/><path d="M37 40 q3 8 3 12 q0 -4 3 -12" fill="#ffb74d"/></g><g transform="translate(18 30) scale(0.7)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  2:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="チェス大会の始まりと終わり"><circle cx="36" cy="36" r="34" fill="#e8eaf6"/><g><rect x="14" y="40" width="7" height="7" fill="#fff"/><rect x="21" y="40" width="7" height="7" fill="#5c6bc0"/><rect x="28" y="40" width="7" height="7" fill="#fff"/><rect x="35" y="40" width="7" height="7" fill="#5c6bc0"/><rect x="42" y="40" width="7" height="7" fill="#fff"/><rect x="49" y="40" width="7" height="7" fill="#5c6bc0"/><rect x="14" y="47" width="7" height="7" fill="#5c6bc0"/><rect x="21" y="47" width="7" height="7" fill="#fff"/><rect x="28" y="47" width="7" height="7" fill="#5c6bc0"/><rect x="35" y="47" width="7" height="7" fill="#fff"/><rect x="42" y="47" width="7" height="7" fill="#5c6bc0"/><rect x="49" y="47" width="7" height="7" fill="#fff"/><rect x="14" y="54" width="7" height="7" fill="#fff"/><rect x="21" y="54" width="7" height="7" fill="#5c6bc0"/><rect x="28" y="54" width="7" height="7" fill="#fff"/><rect x="35" y="54" width="7" height="7" fill="#5c6bc0"/><rect x="42" y="54" width="7" height="7" fill="#fff"/><rect x="49" y="54" width="7" height="7" fill="#5c6bc0"/></g><rect x="13" y="39" width="44" height="23" fill="none" stroke="#3949ab" strokeWidth="2"/><circle cx="24" cy="20" r="10" fill="#fff" stroke="#3949ab" strokeWidth="2"/><path d="M24 20 V13 M24 20 L28 23" stroke="#3949ab" strokeWidth="2" strokeLinecap="round"/><circle cx="50" cy="20" r="10" fill="#fff" stroke="#e53935" strokeWidth="2"/><path d="M50 20 V13 M50 20 L47 24" stroke="#e53935" strokeWidth="2" strokeLinecap="round"/><path d="M36 20 h6" stroke="#9fa8da" strokeWidth="2" strokeDasharray="2 2"/></svg>),
+  3:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="試合の時間"><circle cx="36" cy="36" r="34" fill="#ede7f6"/><path d="M26 12 h20 v6 q0 8 -10 12 q-10 -4 -10 -12 z" fill="#d1c4e9" stroke="#7e57c2" strokeWidth="2"/><path d="M26 60 h20 v-6 q0 -8 -10 -12 q-10 4 -10 12 z" fill="#fff" stroke="#7e57c2" strokeWidth="2"/><path d="M31 54 h10 l-5 -8 z" fill="#b39ddb"/><path d="M26 12 h20 M26 60 h20" stroke="#5e35b1" strokeWidth="3" strokeLinecap="round"/><g transform="translate(58 40) scale(0.8)"><circle cx="0" cy="-8" r="4" fill="#fff" stroke="#455a64" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#fff" stroke="#455a64" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#fff" stroke="#455a64" strokeWidth="1.5"/></g><g transform="translate(14 40) scale(0.8)"><circle cx="0" cy="-8" r="4" fill="#455a64" stroke="#263238" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#455a64" stroke="#263238" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#455a64" stroke="#263238" strokeWidth="1.5"/></g></svg>),
+  4:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="宇宙旅行の到着時こく"><circle cx="36" cy="36" r="34" fill="#1a237e"/><circle cx="12" cy="14" r="1.3" fill="#ffd54f"/><circle cx="60" cy="16" r="1.3" fill="#ffd54f"/><circle cx="64" cy="52" r="1.2" fill="#ffd54f"/><circle cx="10" cy="56" r="1.2" fill="#ffd54f"/><circle cx="52" cy="44" r="11" fill="#ff8a65" stroke="#e64a19" strokeWidth="1.5"/><ellipse cx="52" cy="44" rx="16" ry="4.5" fill="none" stroke="#ffccbc" strokeWidth="2"/><path d="M14 22 Q 30 14 44 34" fill="none" stroke="#80deea" strokeWidth="2" strokeDasharray="4 3"/><g transform="rotate(40 44 34)"><path d="M44 26 q4 5 4 12 h-8 q0 -7 4 -12" fill="#eceff1" stroke="#90a4ae" strokeWidth="1.2"/></g><g transform="translate(20 50) scale(0.75)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  5:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="長さの計算れんしゅう"><circle cx="36" cy="36" r="34" fill="#e0f2f1"/><rect x="10" y="26" width="52" height="12" rx="2" fill="#fff59d" stroke="#f9a825" strokeWidth="2"/><path d="M17 26 v5 M24 26 v4 M31 26 v5 M38 26 v4 M45 26 v5 M52 26 v4" stroke="#f57f17" strokeWidth="1.5"/><text x="22" y="54" fontSize="13" fill="#00796b" fontWeight="bold">+</text><text x="36" y="54" fontSize="13" fill="#c62828" fontWeight="bold">−</text><text x="50" y="54" fontSize="13" fill="#455a64" fontWeight="bold">=</text><g transform="translate(56 14) scale(0.6)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  6:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="チェスボードのよこの長さ"><circle cx="36" cy="36" r="34" fill="#e8eaf6"/><g><rect x="20" y="24" width="8" height="8" fill="#fff"/><rect x="28" y="24" width="8" height="8" fill="#5c6bc0"/><rect x="36" y="24" width="8" height="8" fill="#fff"/><rect x="44" y="24" width="8" height="8" fill="#5c6bc0"/><rect x="20" y="32" width="8" height="8" fill="#5c6bc0"/><rect x="28" y="32" width="8" height="8" fill="#fff"/><rect x="36" y="32" width="8" height="8" fill="#5c6bc0"/><rect x="44" y="32" width="8" height="8" fill="#fff"/><rect x="20" y="40" width="8" height="8" fill="#fff"/><rect x="28" y="40" width="8" height="8" fill="#5c6bc0"/><rect x="36" y="40" width="8" height="8" fill="#fff"/><rect x="44" y="40" width="8" height="8" fill="#5c6bc0"/><rect x="20" y="48" width="8" height="8" fill="#5c6bc0"/><rect x="28" y="48" width="8" height="8" fill="#fff"/><rect x="36" y="48" width="8" height="8" fill="#5c6bc0"/><rect x="44" y="48" width="8" height="8" fill="#fff"/></g><rect x="19" y="23" width="34" height="34" fill="none" stroke="#3949ab" strokeWidth="2"/><path d="M19 16 h34" stroke="#e53935" strokeWidth="2"/><path d="M19 13 v6 M53 13 v6" stroke="#e53935" strokeWidth="2"/><g transform="translate(12 50) scale(0.6)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  7:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="宇宙基地までの距離"><circle cx="36" cy="36" r="34" fill="#1a237e"/><circle cx="16" cy="14" r="1.3" fill="#ffd54f"/><circle cx="36" cy="10" r="1.2" fill="#ffd54f"/><circle cx="62" cy="20" r="1.3" fill="#ffd54f"/><g transform="rotate(90 16 44)"><path d="M16 36 q4 5 4 12 h-8 q0 -7 4 -12" fill="#eceff1" stroke="#90a4ae" strokeWidth="1.2"/></g><rect x="48" y="36" width="16" height="12" rx="3" fill="#b0bec5" stroke="#78909c" strokeWidth="1.5"/><circle cx="56" cy="30" r="6" fill="#cfd8dc" stroke="#78909c" strokeWidth="1.5"/><path d="M24 56 h24" stroke="#80deea" strokeWidth="2.5" strokeLinecap="round"/><path d="M24 56 l5 -3 v6 z M48 56 l-5 -3 v6 z" fill="#80deea"/></svg>),
+  8:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="こまをかさねた高さ"><circle cx="36" cy="36" r="34" fill="#fff3e0"/><g transform="translate(32 46) scale(1.1)"><circle cx="0" cy="-8" r="4" fill="#fff" stroke="#455a64" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#fff" stroke="#455a64" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#fff" stroke="#455a64" strokeWidth="1.5"/></g><g transform="translate(32 26) scale(1.1)"><circle cx="0" cy="-8" r="4" fill="#fff" stroke="#455a64" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#fff" stroke="#455a64" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#fff" stroke="#455a64" strokeWidth="1.5"/></g><path d="M52 14 v44" stroke="#fb8c00" strokeWidth="2"/><path d="M49 14 h6 M49 58 h6" stroke="#fb8c00" strokeWidth="2"/><g transform="translate(14 20) scale(0.6)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  9:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="白いこまと黒いこまの道"><circle cx="36" cy="36" r="34" fill="#e8eaf6"/><path d="M14 22 h44" stroke="#eceff1" strokeWidth="6" strokeLinecap="round"/><path d="M14 22 h44" stroke="#b0bec5" strokeWidth="1" strokeDasharray="3 3"/><path d="M14 44 h28" stroke="#455a64" strokeWidth="6" strokeLinecap="round"/><g transform="translate(14 14) scale(0.7)"><circle cx="0" cy="-8" r="4" fill="#fff" stroke="#455a64" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#fff" stroke="#455a64" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#fff" stroke="#455a64" strokeWidth="1.5"/></g><g transform="translate(14 36) scale(0.7)"><circle cx="0" cy="-8" r="4" fill="#455a64" stroke="#263238" strokeWidth="1.5"/><path d="M-3 -4 q3 4 -2 8 h10 q-5 -4 -2 -8 z" fill="#455a64" stroke="#263238" strokeWidth="1.5" strokeLinejoin="round" transform="translate(-3 0)"/><rect x="-6" y="4" width="12" height="3.5" rx="1.5" fill="#455a64" stroke="#263238" strokeWidth="1.5"/></g><text x="62" y="48" fontSize="12" fill="#e53935" fontWeight="bold">?</text><g transform="translate(58 58) scale(0.6)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>),
+  10:(<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3本のわくをならべる"><circle cx="36" cy="36" r="34" fill="#e0f2f1"/><rect x="8" y="30" width="17" height="12" rx="2" fill="none" stroke="#00897b" strokeWidth="2.5"/><rect x="27" y="30" width="17" height="12" rx="2" fill="none" stroke="#26a69a" strokeWidth="2.5"/><rect x="46" y="30" width="17" height="12" rx="2" fill="none" stroke="#4db6ac" strokeWidth="2.5"/><path d="M8 52 h55" stroke="#fb8c00" strokeWidth="2"/><path d="M8 49 v6 M63 49 v6" stroke="#fb8c00" strokeWidth="2"/><g transform="translate(36 16) scale(0.65)"><line x1="0" y1="-16" x2="0" y2="-11" stroke="#607d8b" strokeWidth="1.5"/><circle cx="0" cy="-17" r="2" fill="#ffd54f"/><rect x="-11" y="-11" width="22" height="20" rx="9" fill="#80cbc4" stroke="#00897b" strokeWidth="1.5"/><rect x="-7" y="-7" width="14" height="8" rx="4" fill="#e0f2f1"/><circle cx="-3.5" cy="-3" r="1.6" fill="#004d40"/><circle cx="3.5" cy="-3" r="1.6" fill="#004d40"/><path d="M-2 4 q2 1.5 4 0" stroke="#004d40" strokeWidth="1.2" fill="none" strokeLinecap="round"/><path d="M0 6.5 l1.2 2.4 2.6 0.3 -1.9 1.8 0.5 2.6 -2.4 -1.3 -2.4 1.3 0.5 -2.6 -1.9 -1.8 2.6 -0.3 z" fill="#ffd54f"/></g></svg>)
+};
+
+function DrawCanvas({ id, height=120, label, canvasRef: externalRef, internalHeight=150 }) {
+  const internalRef = React.useRef(null);
+  const canvasRef = externalRef || internalRef;
+  const isDrawing = React.useRef(false);
+  const lastPos = React.useRef(null);
+  const [hasDrawing, setHasDrawing] = React.useState(false);
+  const [isEraser, setIsEraser] = React.useState(false);
+  const getPos=(e,canvas)=>{const rect=canvas.getBoundingClientRect();const sx=canvas.width/rect.width,sy=canvas.height/rect.height;if(e.touches)return{x:(e.touches[0].clientX-rect.left)*sx,y:(e.touches[0].clientY-rect.top)*sy};return{x:(e.clientX-rect.left)*sx,y:(e.clientY-rect.top)*sy};};
+  React.useEffect(()=>{const canvas=canvasRef.current;const ctx=canvas.getContext("2d");ctx.fillStyle="#fffde7";ctx.fillRect(0,0,canvas.width,canvas.height);const onTS=(e)=>{e.preventDefault();isDrawing.current=true;lastPos.current=getPos(e,canvas);setHasDrawing(true);};const onTM=(e)=>{e.preventDefault();if(!isDrawing.current)return;const pos=getPos(e,canvas);const c2=canvas.getContext("2d");if(eraserRef.current){c2.globalCompositeOperation="destination-out";c2.lineWidth=30;}else{c2.globalCompositeOperation="source-over";c2.strokeStyle="#1a237e";c2.lineWidth=3;}c2.lineCap="round";c2.lineJoin="round";c2.beginPath();c2.moveTo(lastPos.current.x,lastPos.current.y);c2.lineTo(pos.x,pos.y);c2.stroke();lastPos.current=pos;};const onTE=(e)=>{e.preventDefault();isDrawing.current=false;};canvas.addEventListener("touchstart",onTS,{passive:false});canvas.addEventListener("touchmove",onTM,{passive:false});canvas.addEventListener("touchend",onTE,{passive:false});return()=>{canvas.removeEventListener("touchstart",onTS);canvas.removeEventListener("touchmove",onTM);canvas.removeEventListener("touchend",onTE);};},[]); 
+  const eraserRef = React.useRef(false);
+  const sd=(e)=>{isDrawing.current=true;lastPos.current=getPos(e,canvasRef.current);setHasDrawing(true);};
+  const dr=(e)=>{if(!isDrawing.current)return;const c=canvasRef.current;const ctx=c.getContext("2d");const pos=getPos(e,c);if(eraserRef.current){ctx.globalCompositeOperation="destination-out";ctx.lineWidth=30;}else{ctx.globalCompositeOperation="source-over";ctx.strokeStyle="#1a237e";ctx.lineWidth=3;}ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(lastPos.current.x,lastPos.current.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastPos.current=pos;};
+  const sp=()=>{isDrawing.current=false;};
+  const clear=()=>{const c=canvasRef.current;const ctx=c.getContext("2d");ctx.globalCompositeOperation="source-over";ctx.fillStyle="#fffde7";ctx.fillRect(0,0,c.width,c.height);setHasDrawing(false);};
+  const toggleEraser=()=>{eraserRef.current=!eraserRef.current;setIsEraser(eraserRef.current);};
+  return (
+    <div style={{marginTop:10}}>
+      {label&&<p style={{fontSize:12,color:"#5c6bc0",fontWeight:"bold",margin:"0 0 5px 0"}}>{label}</p>}
+      <canvas ref={canvasRef} width={1200} height={300} onMouseDown={sd} onMouseMove={dr} onMouseUp={sp} onMouseLeave={sp}
+        style={{width:"100%",height:internalHeight,border:isEraser?"2px dashed #e74c3c":"2px dashed #9fa8da",borderRadius:10,background:"#fffde7",display:"block",touchAction:isEraser?"none":"pan-y",cursor:isEraser?"cell":"crosshair"}}/>
+      <div style={{display:"flex",gap:6,marginTop:4}}>
+        <button onClick={toggleEraser} style={{background:isEraser?"#ffeaa7":"#f5f5f5",border:isEraser?"1px solid #e74c3c":"1px solid #ddd",color:isEraser?"#e74c3c":"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>{isEraser?"✏️ ペン":"🧹 消しゴム"}</button>
+        {hasDrawing&&<button onClick={clear} style={{background:"#f5f5f5",border:"1px solid #ddd",color:"#666",padding:"3px 10px",borderRadius:6,fontSize:11,cursor:"pointer"}}>🗑️ 全消し</button>}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [showHint, setShowHint] = React.useState({});
+  const [kanjiAnswers, setKanjiAnswers] = React.useState({});
+  const [showWords, setShowWords] = React.useState({});
+  const [speaking, setSpeaking] = React.useState(null);
+
+  const kanjiRefs = React.useRef({});
+  kanjiQuiz.forEach(k=>{ if(!kanjiRefs.current[k.id]) kanjiRefs.current[k.id]=React.createRef(); });
+  const handleKanji=(id,choice)=>{if(kanjiAnswers[id])return;setKanjiAnswers(prev=>({...prev,[id]:choice}));};
+
+  const speak=(text)=>{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="ja-JP";u.rate=0.8;setSpeaking(text);u.onend=()=>setSpeaking(null);window.speechSynthesis.speak(u);};
+
+  // Supabase送信ロジック・提出完了ビューは本HTMLでは完全に削除（このページはデータを一切送信しない）
+  const JP_LEVEL = (typeof QUIZ_META !== "undefined" && QUIZ_META.jp_level) || "N4";  // ヘッダーバッジ表示用に残す
+
+  return (
+    <div style={{minHeight:"100vh",background:"#f0f4ff",paddingBottom:100,overflowX:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,#1a9fd4,#0277bd)",color:"white",padding:"16px 16px 12px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 10px rgba(0,0,0,0.2)"}}>
+        <h1 style={{fontSize:16,fontWeight:"bold",margin:"0 0 3px 0"}}>{QUIZ_META.theme_icon||"📘"} {QUIZ_META.theme_title||"算数で日本語を学ぼう！"}</h1>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {QUIZ_META.theme_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.theme_label}</span>}
+          <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{JP_LEVEL}</span>
+          {QUIZ_META.grade_label && <span style={{background:"rgba(255,255,255,0.2)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{QUIZ_META.grade_label}</span>}
+          <span style={{background:"rgba(255,255,255,0.15)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{questions.length}問</span>
+        </div>
+      </div>
+
+      <div style={{padding:"12px"}}>
+        <div style={{background:"#e1f5fe",borderRadius:14,marginBottom:14,border:"2px solid #1a9fd4",padding:"12px 14px",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+          <p style={{fontSize:13,fontWeight:"bold",color:"#0277bd",margin:0,lineHeight:1.8}}>📄 なまえ・<ruby>式<rt>しき</rt></ruby>・<ruby>答<rt>こた</rt></ruby>えは、<ruby>解答用紙<rt>かいとうようし</rt></ruby>に<ruby>書<rt>か</rt></ruby>いてね！<br/><span style={{fontWeight:"normal",fontSize:12,color:"#0288d1"}}>Read the questions here, and write your name and answers on your paper answer sheet.</span></p>
+        </div>
+
+        {questions.map((q,idx)=>{
+          const lb=LEVEL_BADGE[q.level]||{label:q.level,color:"#888",bg:"#f5f5f5"};
+          const uc=UNIT_COLORS[q.unit]||{color:"#555",bg:"#f5f5f5"};
+          return (
+            <div key={q.id} id={'q-'+q.id} style={{background:"white",borderRadius:14,marginBottom:14,border:"2px solid #dde3f0",overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+              <div style={{background:"linear-gradient(90deg,#1a9fd4,#0277bd)",padding:"8px 14px",display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                <span style={{background:"white",color:"#0277bd",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>Q{idx+1}</span>
+                <span style={{background:uc.bg,color:uc.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{q.unit}</span>
+                <span style={{background:lb.bg,color:lb.color,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:"bold"}}>{lb.label}</span>
+              </div>
+
+              <div style={{padding:"14px 12px"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                  <div style={{flexShrink:0}}>{illustrations[q.id]}</div>
+                  <p style={{fontSize:15,lineHeight:2.1,color:"#1a1a1a",fontWeight:"500",margin:0,wordBreak:"break-word"}}>{q.jp}</p>
+                </div>
+
+                <button onClick={()=>speak(q.reading)}
+                  style={{background:speaking===q.reading?"#e3f2fd":"#f5f5f5",border:`1px solid ${speaking===q.reading?"#1a9fd4":"#ddd"}`,color:speaking===q.reading?"#1a9fd4":"#666",padding:"5px 12px",borderRadius:8,fontSize:12,cursor:"pointer",marginBottom:12}}>
+                  {speaking===q.reading?"🔊 Playing...":"🔊 読んでみよう / Read aloud"}
+                </button>
+
+                <div style={{marginTop:10,background:"#fff8e1",border:"2px dashed #f9a825",borderRadius:10,padding:"10px 12px",display:"flex",gap:8,alignItems:"center"}}>
+                  <span style={{fontSize:20,flexShrink:0}}>✏️</span>
+                  <p style={{fontSize:13,fontWeight:"bold",color:"#8d6e63",margin:0,lineHeight:1.7}}><ruby>式<rt>しき</rt></ruby>と<ruby>答<rt>こた</rt></ruby>えは<ruby>解答用紙<rt>かいとうようし</rt></ruby>に<ruby>書<rt>か</rt></ruby>いてね<br/><span style={{fontWeight:"normal",fontSize:11.5,color:"#a1887f"}}>Write your equation and answer on your answer sheet!</span></p>
+                </div>
+
+                <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
+                  <button onClick={()=>setShowWords(p=>({...p,[q.id]:!p[q.id]}))}
+                    style={{background:showWords[q.id]?"#fff3e0":"#f5f5f5",border:`1px solid ${showWords[q.id]?"#ff9800":"#ddd"}`,color:showWords[q.id]?"#e65100":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                    📖 ことば / Words
+                  </button>
+                  <button onClick={()=>setShowHint(p=>({...p,[q.id]:!p[q.id]}))}
+                    style={{background:showHint[q.id]?"#e8f5e9":"#f5f5f5",border:`1px solid ${showHint[q.id]?"#43a047":"#ddd"}`,color:showHint[q.id]?"#2e7d32":"#666",padding:"6px 12px",borderRadius:8,fontSize:12,cursor:"pointer"}}>
+                    🇬🇧 English hint
+                  </button>
+                  <button onClick={()=>{
+                    if(idx < questions.length-1){
+                      const next=document.getElementById('q-'+questions[idx+1].id);
+                      if(next) next.scrollIntoView({behavior:'smooth',block:'start'});
+                    } else {
+                      const kanjiEl=document.getElementById('kanji-section');
+                      if(kanjiEl) kanjiEl.scrollIntoView({behavior:'smooth',block:'start'});
+                    }
+                  }} style={{marginLeft:"auto",background:idx < questions.length-1?"#1a9fd4":"#e53935",color:"white",border:"none",padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:"bold",cursor:"pointer",boxShadow:"0 2px 6px rgba(0,0,0,0.2)"}}>
+                    {idx < questions.length-1 ? "次の問題へ ▼" : "漢字コーナーへ ▼"}
+                  </button>
+                </div>
+              </div>
+
+              {showWords[q.id]&&(
+                <div style={{borderTop:"1px solid #fff3e0",background:"#fffbf0",padding:"12px"}}>
+                  <p style={{fontSize:11,color:"#e65100",fontWeight:"bold",margin:"0 0 8px 0"}}>📖 ことば / Words</p>
+                  {q.words.map((w,i)=>(
+                    <div key={i} style={{background:"white",border:"1px solid #ffe0b2",borderRadius:10,padding:"8px 10px",marginBottom:6}}>
+                      <p style={{fontSize:14,fontWeight:"bold",color:"#333",margin:"0 0 2px 0"}}>{w.word}</p>
+                      <p style={{fontSize:13,color:"#1a73e8",margin:"0 0 2px 0"}}>🇬🇧 {w.meaning}</p>
+                      <p style={{fontSize:11,color:"#888",margin:0}}>例: {w.example}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showHint[q.id]&&(
+                <div style={{borderTop:"1px solid #e8f5e9",background:"#f1f8f1",padding:"12px"}}>
+                  <p style={{fontSize:11,color:"#2e7d32",fontWeight:"bold",margin:"0 0 4px 0"}}>🇬🇧 English hint</p>
+                  <p style={{fontSize:14,color:"#333",margin:0,fontStyle:"italic"}}>{q.hint}</p>
+                </div>
+              )}
+
+            </div>
+          );
+        })}
+
+        {/* 今日の漢字コーナー */}
+        <div id="kanji-section" style={{background:"linear-gradient(135deg,#e65100,#bf360c)",borderRadius:14,padding:"14px 16px",marginBottom:12}}>
+          <h2 style={{color:"white",fontSize:16,fontWeight:"bold",margin:"0 0 2px 0"}}>🈳 今日の漢字 / Today's Kanji 🔵</h2>
+          <p style={{color:"rgba(255,255,255,0.8)",fontSize:12,margin:0}}>宇宙・参加・試合　選んで、書いてみよう！</p>
+        </div>
+
+        {kanjiQuiz.map(k=>{
+          const selected=kanjiAnswers[k.id];const isCorrect=selected===k.correct;
+          return (
+            <div key={k.id} style={{background:"white",borderRadius:14,marginBottom:14,border:`2px solid ${selected?(isCorrect?"#43a047":"#e53935"):"#dde3f0"}`,overflow:"hidden",boxShadow:"0 2px 6px rgba(0,0,0,0.07)"}}>
+              <div style={{padding:"14px 12px"}}>
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  <span style={{background:"#e65100",color:"white",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:"bold"}}>漢字</span>
+                </div>
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:10}}>
+                  <div style={{flexShrink:0}}><KanjiIllustration id={k.id}/></div>
+                  <div>
+                    <p style={{fontSize:18,fontWeight:"bold",color:"#222",margin:"0 0 6px 0"}}>{k.en} = {k.reading}</p>
+                    <p style={{fontSize:13,color:"#888",margin:0,fontStyle:"italic"}}>{k.hint}</p>
+                  </div>
+                </div>
+                <p style={{fontSize:14,color:"#333",margin:"0 0 10px 0",fontWeight:"bold"}}>「{k.reading}」の漢字はどれ？ / Which kanji?</p>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+                  {k.choices.map(choice=>{
+                    let bg="#f5f5f5",border="#ddd",color="#333";
+                    if(selected){if(choice===k.correct){bg="#e8f5e9";border="#43a047";color="#2e7d32";}else if(choice===selected&&choice!==k.correct){bg="#ffebee";border="#e53935";color="#c62828";}}
+                    return <button key={choice} onClick={()=>handleKanji(k.id,choice)}
+                      style={{background:bg,border:`2px solid ${border}`,color,padding:"12px 16px",borderRadius:10,fontSize:20,cursor:selected?"default":"pointer",fontWeight:"bold",minWidth:70}}>{choice}</button>;
+                  })}
+                </div>
+                {selected&&<p style={{fontSize:14,fontWeight:"bold",color:isCorrect?"#43a047":"#e53935",marginBottom:10}}>{isCorrect?"✓ 正解！Correct! 🎉":`✗ 正解は「${k.correct}」/ The answer is「${k.correct}」`}</p>}
+                <DrawCanvas id={k.id} height={160} label="✍️ 書いてみよう！/ Let's write it!" canvasRef={kanjiRefs.current[k.id]}/>
+              </div>
+            </div>
+          );
+        })}
+
+        <div style={{background:"#e8f5e9",border:"2px solid #66bb6a",borderRadius:14,padding:"14px 16px",textAlign:"center"}}>
+          <p style={{fontSize:14,fontWeight:"bold",color:"#2e7d32",margin:0,lineHeight:1.8}}>🎉 おつかれさま！<ruby>解答用紙<rt>かいとうようし</rt></ruby>を<ruby>先生<rt>せんせい</rt></ruby>にわたしてね<br/><span style={{fontWeight:"normal",fontSize:12,color:"#43a047"}}>All done! Hand your answer sheet to your teacher. (Nothing is sent from this page.)</span></p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+</script>
+</body>
+</html>
