@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>今週の 課題</title><style>
+:root { --bg:#f7f9f7; --card:#fff; --ink:#171c1a; --pitch:#16643f; --gold:#b8860b; --line:#dfe5e1; --mut:#7a827e; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,"Hiragino Sans","Noto Sans CJK JP",sans-serif; background:var(--bg); color:var(--ink); padding-bottom:40px; }
+header { position:sticky; top:0; z-index:5; background:var(--pitch); color:#fff; padding:calc(env(safe-area-inset-top) + 12px) 16px 10px; }
+header h1 { font-size:17px; letter-spacing:.04em; } header .who { font-size:12px; opacity:.85; }
+.tabs { display:flex; gap:6px; margin-top:10px; }
+.tabs button { flex:1; border:none; border-radius:8px; padding:9px 0; font-size:14px; font-weight:700; background:rgba(255,255,255,.18); color:#fff; font-family:inherit; }
+.tabs button.on { background:#fff; color:var(--pitch); }
+main { padding:14px 14px 0; max-width:640px; margin:0 auto; }
+.rule { background:#e8f0ea; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.6; margin-bottom:8px; }
+.rule .en { display:block; color:var(--mut); font-size:12px; font-style:italic; margin-top:3px; }
+.parent { margin:0 0 14px; border:1px solid #d9d3e6; background:#f3f0f8; border-radius:10px; overflow:hidden; }
+.parent summary { list-style:none; cursor:pointer; padding:9px 12px; font-size:12.5px; font-weight:700; color:#5a3a7a; display:flex; align-items:center; }
+.parent summary::-webkit-details-marker { display:none; } .parent summary::after { content:"▾"; margin-left:auto; }
+.parent[open] summary::after { content:"▴"; }
+.parent .body { padding:0 12px 10px; font-size:12.5px; line-height:1.6; color:#3d2e4f; }
+.parent h5 { font-size:11px; letter-spacing:.08em; color:#5a3a7a; margin:6px 0 3px; }
+.parent ul { list-style:none; } .parent li { padding:2px 0 2px 12px; position:relative; }
+.parent li::before { content:"▶"; position:absolute; left:0; top:6px; font-size:5.5px; color:#5a3a7a; }
+.stage { display:flex; align-items:center; gap:8px; margin:16px 0 8px; }
+.stage .no { flex:none; width:24px; height:24px; border-radius:50%; background:var(--pitch); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.stage.gold .no { background:var(--gold); } .stage .ttl { font-size:15px; font-weight:800; }
+.stage .hint { font-size:11px; color:var(--mut); margin-left:auto; text-align:right; line-height:1.3; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.line { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
+.line:last-child { border-bottom:none; }
+.line .txt { flex:1; font-size:19px; line-height:1.6; }
+.line .txt .en { display:block; font-size:12px; color:var(--mut); font-style:italic; line-height:1.4; margin-top:2px; }
+.line .txt .wds { display:block; margin-top:2px; }
+.wd { display:inline-block; font-size:12px; color:var(--mut); margin-right:10px; } .wd i { font-style:italic; color:#98a09c; }
+.en-words .en { display:none !important; } .en-none .en, .en-none .wds { display:none !important; } .en-full .wds { display:none !important; }
+.line .drillrow { display:flex; flex:1; } .line .drillrow span { flex:1; text-align:center; font-size:19px; }
+.line .drillrow.pair span { font-size:17px; } .line .drillrow.pair i { font-style:normal; color:#bbb; margin:0 6px; }
+.play { flex:none; width:46px; height:46px; border-radius:50%; border:none; background:var(--pitch); color:#fff; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.play svg { width:24px; height:24px; margin-left:2px; } .play.playing { background:var(--gold); }
+.play.playing .w1 { animation:wv 1s ease-in-out infinite; } .play.playing .w2 { animation:wv 1s ease-in-out infinite .25s; }
+@keyframes wv { 0%,100% { opacity:1; } 50% { opacity:.15; } }
+.r { position:relative; display:inline-block; }
+.r .f { position:absolute; top:-.95em; left:-1em; right:-1em; font-size:10px; text-align:center; white-space:nowrap; color:var(--mut); line-height:1; }
+.hide-f .r .f { visibility:hidden; } .kanji .line .txt, .line .txt.rb { line-height:2.1; padding-top:6px; }
+.toggle { font-size:12px; color:var(--pitch); background:none; border:1px solid var(--pitch); border-radius:14px; padding:4px 10px; font-family:inherit; }
+.chk { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); font-size:16px; }
+.chk:last-child { border-bottom:none; } .chk input { width:22px; height:22px; accent-color:var(--pitch); }
+.chk.done { color:var(--mut); text-decoration:line-through; }
+.done-banner { margin-top:14px; text-align:center; padding:14px; border-radius:12px; background:#e8f0ea; color:var(--pitch); font-weight:700; display:none; }
+.done-banner.show { display:block; }
+.foot { margin-top:22px; font-size:11px; color:var(--mut); text-align:center; line-height:1.6; }
+</style></head><body>
+<header><h1>今週の 課題</h1><div class="who">ジオくん</div><div class="tabs"><button data-day="0">1日目</button><button data-day="1">2日目</button><button data-day="2">3日目</button></div></header>
+<main>
+  <div class="rule"><b>やりかた</b>　1日 5分。3日間、①と②は まいにち おなじ文。③は 1日ずつ かわる。②は 先に 音声を きいてから、じぶんで よむ。きく ときは、ゆびで 文を なぞる。<span class="en">5 minutes a day for 3 days. ① and ② use the same sentences every day; ③ changes each day. For ②, listen to the audio first, then read it yourself. Follow the words with your finger while you listen.</span></div>
+  <details class="parent"><summary>保護者の方へ ── 今週のねらい</summary><div class="body">
+    <ul><li>①：小さい「ゃ・ゅ・ょ」の読み分けを固めます。表を声に出すだけで構いません。</li><li>②：同じ文を3日間読んで、読みの速さを上げます。英語の補助は日ごとに減らします。</li><li>③：同じ3文を、ふりがな付き → ふりがな無しへ段階的に進めます。小1の漢字だけです。</li><li>カタカナはまだ読めないので、今週はカタカナにひらがなを振っています。カタカナ自体は、ジオくんの好きな言葉（サッカー・ポケモン等）から近いうちに扱います。</li></ul><h5>余裕があれば</h5><ul><li>②の文を1つ、お家の方が日本語で読み上げて、ジオくんが英語で意味を言う（1分）。</li><li>③を読んだあと、「どういう意味？」と英語で聞いてみる。</li><li>間違えても、その場で直さなくて大丈夫です。授業で扱います。</li></ul></div></details>
+  <div class="stage "><div class="no">1</div><div class="ttl">ちいさい「ゃ・ゅ・ょ」</div><div class="hint" id="">こえに だして、ゆっくり 1回<br><i>Say each one out loud, slowly, once</i></div></div><div class="card"><div class="line"><button class="play" data-a="d1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="drillrow"><span>きゃ</span><span>きゅ</span><span>きょ</span><span>しゃ</span><span>しゅ</span><span>しょ</span></div></div><div class="line"><button class="play" data-a="d2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="drillrow"><span>ちゃ</span><span>ちゅ</span><span>ちょ</span><span>じゃ</span><span>じゅ</span><span>じょ</span></div></div><div class="line"><button class="play" data-a="d3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="drillrow"><span>りゃ</span><span>りゅ</span><span>りょ</span><span>びゃ</span><span>びゅ</span><span>びょ</span></div></div><div class="line"><button class="play" data-a="dp" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="drillrow pair"><span>きょう<i>／</i>きゅう</span><span>しょう<i>／</i>しゅう</span><span>ちょう<i>／</i>ちゅう</span></div></div></div>
+  <div class="stage "><div class="no">2</div><div class="ttl">まいにち よむ文</div><div class="hint" id="">きいてから、2回 よむ<br><i>Listen first, then read it twice</i></div></div><div class="card en-full" data-en><div class="line"><button class="play" data-a="r1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb">きょうは <span class="r">サッカー<span class="f">さっかー</span></span>の れんしゅうが ある。<span class="en">Today I have soccer practice.</span><span class="wds"><span class="wd">れんしゅう <i>practice</i></span></span></div></div><div class="line"><button class="play" data-a="r2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb">しゅうまつは おかあさんと かいものに いく。<span class="en">On the weekend I'm going shopping with my mum.</span><span class="wds"><span class="wd">しゅうまつ <i>weekend</i></span><span class="wd">かいもの <i>shopping</i></span></span></div></div><div class="line"><button class="play" data-a="r3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">ヴィオラ<span class="f">びおら</span></span>を ひいてから、<span class="r">ポケモン<span class="f">ぽけもん</span></span>を ちょっと する。<span class="en">After I play the viola, I'll play a bit of Pokémon.</span><span class="wds"><span class="wd">ひいてから <i>after playing</i></span><span class="wd">ちょっと <i>a bit</i></span></span></div></div><div class="line"><button class="play" data-a="r4" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb">きゅうに あめが ふって きた。<span class="en">Suddenly it started to rain.</span><span class="wds"><span class="wd">きゅうに <i>suddenly</i></span><span class="wd">ふって きた <i>started to fall</i></span></span></div></div><div class="line"><button class="play" data-a="r5" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb">しゅくだいを おわらせてから、あそびに いった。<span class="en">After I finished my homework, I went out to play.</span><span class="wds"><span class="wd">しゅくだい <i>homework</i></span><span class="wd">おわらせてから <i>after finishing</i></span></span></div></div></div>
+  <div class="stage gold"><div class="no">3</div><div class="ttl">かんじの 文</div><div class="hint" id="khint"><br><i></i></div></div>
+  <div style="text-align:right; margin-bottom:6px"><button class="toggle" id="ftoggle">ふりがな を かくす</button></div>
+  <div class="card kanji en-full" id="kanji" data-en><div class="line"><button class="play" data-a="k1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">日<span class="f">にち</span></span>よう<span class="r">日<span class="f">び</span></span>に、<span class="r">山<span class="f">やま</span></span>へ <span class="r">行<span class="f">い</span></span>った。<span class="en">On Sunday, I went to the mountains.</span><span class="wds"><span class="wd">山 <i>mountain</i></span><span class="wd">行った <i>went</i></span></span></div></div><div class="line"><button class="play" data-a="k2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">先生<span class="f">せんせい</span></span>と <span class="r">学校<span class="f">がっこう</span></span>で <span class="r">本<span class="f">ほん</span></span>を <span class="r">見<span class="f">み</span></span>た。<span class="en">I looked at a book at school with my teacher.</span><span class="wds"><span class="wd">本 <i>book</i></span><span class="wd">見た <i>looked at</i></span></span></div></div><div class="line"><button class="play" data-a="k3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">大<span class="f">おお</span></span>きい <span class="r">川<span class="f">かわ</span></span>に、<span class="r">小<span class="f">ちい</span></span>さい <span class="r">木<span class="f">き</span></span>が ある。<span class="en">There is a small tree by the big river.</span><span class="wds"><span class="wd">川 <i>river</i></span><span class="wd">木 <i>tree</i></span></span></div></div></div>
+  <div class="stage "><div class="no">✓</div><div class="ttl">きょうの チェック</div></div><div class="card checks" id="checks"><label class="chk"><input type="checkbox" data-i="0">①を よんだ</label><label class="chk"><input type="checkbox" data-i="1">②おんせいを きいた</label><label class="chk"><input type="checkbox" data-i="2">②2かい よんだ</label><label class="chk"><input type="checkbox" data-i="3">③を よんだ</label></div>
+  <div class="done-banner" id="done">きょうの ぶん、おわり！　Great job!</div>
+  <div class="foot">おんせいが ながれない ときは、おうちの人に 言ってね</div>
+</main><audio id="a-d1" src="audio/d1.m4a" preload="none"></audio><audio id="a-d2" src="audio/d2.m4a" preload="none"></audio><audio id="a-d3" src="audio/d3.m4a" preload="none"></audio><audio id="a-dp" src="audio/dp.m4a" preload="none"></audio><audio id="a-r1" src="audio/r1.m4a" preload="none"></audio><audio id="a-r2" src="audio/r2.m4a" preload="none"></audio><audio id="a-r3" src="audio/r3.m4a" preload="none"></audio><audio id="a-r4" src="audio/r4.m4a" preload="none"></audio><audio id="a-r5" src="audio/r5.m4a" preload="none"></audio><audio id="a-k1" src="audio/k1.m4a" preload="none"></audio><audio id="a-k2" src="audio/k2.m4a" preload="none"></audio><audio id="a-k3" src="audio/k3.m4a" preload="none"></audio>
+<script>
+const DAYS = [{"label": "1日目", "kanji": "furigana", "en": "full", "hint": "ふりがなを 見て よむ", "hint_en": "Read with the furigana"}, {"label": "2日目", "kanji": "both", "en": "words", "hint": "ふりがな ありを よんでから、なしを よむ", "hint_en": "Read with furigana first, then without"}, {"label": "3日目", "kanji": "plain", "en": "none", "hint": "ふりがな なしで よむ。わすれたら 見て いい", "hint_en": "Read without furigana. You can peek if you forget"}], KEY = "hw-\u30b8\u30aa\u304f\u3093-w1";
+let day = 0, state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const tabs = document.querySelectorAll(".tabs button"), kanji = document.getElementById("kanji"), khint = document.getElementById("khint"),
+      ftog = document.getElementById("ftoggle"), checks = document.querySelectorAll("#checks input"), banner = document.getElementById("done"),
+      enCards = document.querySelectorAll("[data-en]");
+function setDay(i) {
+  day = i; tabs.forEach((b, j) => b.classList.toggle("on", j === i));
+  const D = DAYS[i];
+  khint.innerHTML = D.hint + "<br><i>" + D.hint_en + "</i>";
+  const hide = D.kanji === "plain"; kanji.classList.toggle("hide-f", hide);
+  ftog.textContent = hide ? "ふりがな を 見る" : "ふりがな を かくす";
+  enCards.forEach(c => { c.classList.remove("en-full","en-words","en-none"); c.classList.add("en-" + D.en); });
+  checks.forEach((c, k) => { c.checked = !!(state[i] && state[i][k]); c.closest(".chk").classList.toggle("done", c.checked); });
+  updateBanner(); state.lastDay = i; save();
+}
+ftog.addEventListener("click", () => { const hide = !kanji.classList.contains("hide-f"); kanji.classList.toggle("hide-f", hide); ftog.textContent = hide ? "ふりがな を 見る" : "ふりがな を かくす"; });
+tabs.forEach(b => b.addEventListener("click", () => setDay(+b.dataset.day)));
+checks.forEach(c => c.addEventListener("change", () => { state[day] = state[day] || {}; state[day][c.dataset.i] = c.checked; save(); c.closest(".chk").classList.toggle("done", c.checked); updateBanner(); }));
+function updateBanner() { banner.classList.toggle("show", [...checks].every(c => c.checked)); }
+let current = null;
+document.querySelectorAll(".play").forEach(btn => btn.addEventListener("click", () => {
+  const a = document.getElementById("a-" + btn.dataset.a);
+  if (current && current !== a) { current.pause(); current.currentTime = 0; document.querySelectorAll(".play.playing").forEach(p => p.classList.remove("playing")); }
+  if (!a.paused) { a.pause(); a.currentTime = 0; btn.classList.remove("playing"); current = null; return; }
+  current = a; btn.classList.add("playing"); a.onended = () => btn.classList.remove("playing");
+  a.play().catch(() => btn.classList.remove("playing"));
+}));
+setDay(Math.min(state.lastDay || 0, DAYS.length - 1));
+</script></body></html>
