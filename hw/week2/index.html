@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>テストのじゅんび</title><style>
+:root { --bg:#f7f9f7; --card:#fff; --ink:#171c1a; --pitch:#16643f; --gold:#b8860b; --line:#dfe5e1; --mut:#7a827e; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,"Hiragino Sans","Noto Sans CJK JP",sans-serif; background:var(--bg); color:var(--ink); padding-bottom:40px; }
+header { position:sticky; top:0; z-index:5; background:var(--pitch); color:#fff; padding:calc(env(safe-area-inset-top) + 12px) 16px 10px; }
+header h1 { font-size:17px; letter-spacing:.04em; } header .who { font-size:12px; opacity:.85; }
+.tabs { display:flex; gap:6px; margin-top:10px; }
+.tabs button { flex:1; border:none; border-radius:8px; padding:9px 0; font-size:14px; font-weight:700; background:rgba(255,255,255,.18); color:#fff; font-family:inherit; }
+.tabs button.on { background:#fff; color:var(--pitch); }
+main { padding:14px 14px 0; max-width:640px; margin:0 auto; }
+.rule { background:#e8f0ea; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.6; margin-bottom:8px; }
+.rule .en { display:block; color:var(--mut); font-size:12px; font-style:italic; margin-top:3px; }
+.parent { margin:0 0 14px; border:1px solid #d9d3e6; background:#f3f0f8; border-radius:10px; overflow:hidden; }
+.parent summary { list-style:none; cursor:pointer; padding:9px 12px; font-size:12.5px; font-weight:700; color:#5a3a7a; display:flex; align-items:center; }
+.parent summary::-webkit-details-marker { display:none; } .parent summary::after { content:"▾"; margin-left:auto; }
+.parent[open] summary::after { content:"▴"; }
+.parent .body { padding:0 12px 10px; font-size:12.5px; line-height:1.6; color:#3d2e4f; }
+.parent h5 { font-size:11px; letter-spacing:.08em; color:#5a3a7a; margin:6px 0 3px; }
+.parent ul { list-style:none; } .parent li { padding:2px 0 2px 12px; position:relative; }
+.parent li::before { content:"▶"; position:absolute; left:0; top:6px; font-size:5.5px; color:#5a3a7a; }
+.stage { display:flex; align-items:center; gap:8px; margin:16px 0 8px; }
+.stage .no { flex:none; width:24px; height:24px; border-radius:50%; background:var(--pitch); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.stage.gold .no { background:var(--gold); } .stage .ttl { font-size:15px; font-weight:800; }
+.stage .hint { font-size:11px; color:var(--mut); margin-left:auto; text-align:right; line-height:1.3; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.line { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
+.line:last-child { border-bottom:none; }
+.line .txt { flex:1; font-size:19px; line-height:1.6; }
+.line .txt .en { display:block; font-size:12px; color:var(--mut); font-style:italic; line-height:1.4; margin-top:2px; }
+.line .txt .wds { display:block; margin-top:2px; }
+.wd { display:inline-block; font-size:12px; color:var(--mut); margin-right:10px; } .wd i { font-style:italic; color:#98a09c; }
+.en-words .en { display:none !important; } .en-none .en, .en-none .wds { display:none !important; } .en-full .wds { display:none !important; }
+.line .drillrow { display:flex; flex:1; } .line .drillrow span { flex:1; text-align:center; font-size:19px; }
+.line .drillrow.pair span { font-size:17px; } .line .drillrow.pair i { font-style:normal; color:#bbb; margin:0 6px; }
+.play { flex:none; width:46px; height:46px; border-radius:50%; border:none; background:var(--pitch); color:#fff; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.play svg { width:24px; height:24px; margin-left:2px; } .play.playing { background:var(--gold); }
+.play.playing .w1 { animation:wv 1s ease-in-out infinite; } .play.playing .w2 { animation:wv 1s ease-in-out infinite .25s; }
+@keyframes wv { 0%,100% { opacity:1; } 50% { opacity:.15; } }
+.r { position:relative; display:inline-block; }
+.r .f { position:absolute; top:-.95em; left:-1em; right:-1em; font-size:10px; text-align:center; white-space:nowrap; color:var(--mut); line-height:1; }
+.hide-f .r .f { visibility:hidden; } .kanji .line .txt, .line .txt.rb { line-height:2.1; padding-top:6px; }
+.toggle { font-size:12px; color:var(--pitch); background:none; border:1px solid var(--pitch); border-radius:14px; padding:4px 10px; font-family:inherit; }
+.chk { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); font-size:16px; }
+.chk:last-child { border-bottom:none; } .chk input { width:22px; height:22px; accent-color:var(--pitch); }
+.chk.done { color:var(--mut); text-decoration:line-through; }
+.done-banner { margin-top:14px; text-align:center; padding:14px; border-radius:12px; background:#e8f0ea; color:var(--pitch); font-weight:700; display:none; }
+.done-banner.show { display:block; }
+.foot { margin-top:22px; font-size:11px; color:var(--mut); text-align:center; line-height:1.6; }
+
+.kwd { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.kwd .line { flex-direction:column; align-items:stretch; gap:6px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+.kwd .line .txt { font-size:22px; line-height:1.4; padding-top:12px; text-align:center; }
+.kwd .line .en { text-align:center; }
+.kwd .line .play { align-self:center; }
+.rule.rb { line-height:2.0; padding-top:14px; } header .who.rb { line-height:2; padding-top:8px; } .snote b.rb { line-height:2; padding-top:6px; }
+.kcard { margin-bottom:12px; }
+.kcard .line { border-bottom:none; } .kcard .line .txt { font-size:24px; letter-spacing:.06em; padding-top:12px; }
+.kcard .line .txt .r .f { font-size:12px; }
+.trace-wrap { padding:0 12px 10px; }
+.trace { display:block; width:100%; border:1.5px dashed #b9c4bd; border-radius:10px; background:#fff; touch-action:none; }
+.trace-bar { display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:12px; color:var(--mut); }
+.trace-bar .cnt.ok { color:var(--pitch); font-weight:700; }
+.trace-bar .clear { font-size:12px; color:#8a3b3b; background:#fbeeee; border:1px solid #e3b9b9; border-radius:14px; padding:4px 12px; font-family:inherit; }
+.trace-bar .clear i { font-style:italic; font-size:10px; color:#b07070; margin-left:2px; }
+.stage .ttl .ten { display:block; font-size:11px; font-weight:400; color:var(--mut); font-style:italic; letter-spacing:0; }
+.para-h { display:flex; align-items:baseline; gap:8px; padding:10px 14px 0; }
+.para-h .n { font-size:18px; font-weight:800; color:var(--pitch); } .para-h .l { font-size:12px; color:var(--mut); font-style:italic; }
+.struct { padding:6px 14px 10px; }
+.srow { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+.srow .sn { flex:none; width:30px; height:30px; border-radius:50%; background:var(--gold); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.srow .stag { font-size:12px; font-weight:800; letter-spacing:.06em; color:var(--gold); margin-bottom:3px; }
+.srow .sen { font-size:14px; line-height:1.55; }
+.srow .sq { font-size:12px; color:var(--pitch); font-weight:700; margin-top:4px; }
+.snotes { margin-top:8px; }
+.snote { padding:8px 10px; margin-top:6px; background:#fdf8ea; border-radius:10px; font-size:13px; line-height:1.5; }
+.snote b { display:block; color:#7a5a12; margin-bottom:2px; }
+.terms .line .txt { font-size:18px; }
+.tip { margin-top:14px; background:#e8f0ea; border-radius:12px; padding:12px 14px; font-size:14px; line-height:1.6; }
+.tip b { color:var(--pitch); } .tip .en { display:block; font-size:12px; color:var(--mut); font-style:italic; }
+</style></head><body>
+<header><h1>テストのじゅんび</h1><div class="who rb">「アップとルーズで<span class="r">伝<span class="f">つた</span></span>える」①〜③　ジオくん</div></header>
+<main>
+  <div class="rule rb"><b>やりかた</b>　1<span class="r">日<span class="f">にち</span></span> 5<span class="r">分<span class="f">ふん</span></span>。①カタカナは、おんせいを きいて よんでから、がめんに ゆびで なぞって かく。②ようやくは、おんせいを きいてから、こえに<span class="r">出<span class="f">だ</span></span>して よむ。えいごで いみを たしかめる。<span class="en">5 minutes a day. ① Katakana: listen, read, then trace with your finger on the screen. ② Summaries: listen first, then read aloud. Check the meaning in English.</span></div>
+  <details class="parent"><summary>保護者の方へ ── 今週のねらい</summary><div class="body"><ul><li>テスト範囲はワークp.24–25（教科書「アップとルーズで伝える」①〜③段落）です。次回の授業でこの2ページを解説します。</li><li>この文章はカタカナが多く、中心語の「アップ」「ルーズ」もカタカナです。今週は、答えとして書く可能性が高い4語（アップ・ルーズ・サッカー・コート）だけに絞って、読めて書けることを目標にします。</li><li>各段落を2行にまとめた要約は、本文の言葉をなるべくそのまま使っています。授業ではこの要約を手がかりに本文を読みます。</li><li>英語の構造図で、3つの段落の役割（例・例・定義と筆者の考え）と、設問との対応を示しています。</li></ul></div></details>
+  <div class="stage "><div class="no">1</div><div class="ttl">カタカナの ことば<span class="ten">Katakana words</span></div><div class="hint">きいて、よんで、ゆびで 3かい なぞる<br><i>Listen, read, then trace 3 times with your finger</i></div></div><div class="card kcard">
+      <div class="line"><button class="play" data-a="w1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">アップ<span class="f">あっぷ</span></span></div><span class="en">close-up</span></div>
+      <div class="trace-wrap"><canvas class="trace" data-word="アップ"></canvas>
+        <div class="trace-bar"><span class="cnt" data-n="0">なぞった： 0 / 3</span><button class="clear">けす <i>Clear</i></button></div></div>
+    </div><div class="card kcard">
+      <div class="line"><button class="play" data-a="w2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">ルーズ<span class="f">るーず</span></span></div><span class="en">wide shot</span></div>
+      <div class="trace-wrap"><canvas class="trace" data-word="ルーズ"></canvas>
+        <div class="trace-bar"><span class="cnt" data-n="0">なぞった： 0 / 3</span><button class="clear">けす <i>Clear</i></button></div></div>
+    </div><div class="card kcard">
+      <div class="line"><button class="play" data-a="w3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">サッカー<span class="f">さっかー</span></span></div><span class="en">soccer</span></div>
+      <div class="trace-wrap"><canvas class="trace" data-word="サッカー"></canvas>
+        <div class="trace-bar"><span class="cnt" data-n="0">なぞった： 0 / 3</span><button class="clear">けす <i>Clear</i></button></div></div>
+    </div><div class="card kcard">
+      <div class="line"><button class="play" data-a="w4" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt"><span class="r">コート<span class="f">こーと</span></span></div><span class="en">the pitch (field)</span></div>
+      <div class="trace-wrap"><canvas class="trace" data-word="コート"></canvas>
+        <div class="trace-bar"><span class="cnt" data-n="0">なぞった： 0 / 3</span><button class="clear">けす <i>Clear</i></button></div></div>
+    </div>
+  <div class="stage gold"><div class="no">2</div><div class="ttl">ようやく<span class="ten">Summary</span></div><div class="hint">きいてから、こえに 出して よむ<br><i>Listen first, then read aloud</i></div></div><div class="card" style="margin-bottom:10px"><div class="para-h"><span class="n">①</span><span class="l">Wide shot</span></div><div class="line"><button class="play" data-a="s11" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">画面<span class="f">がめん</span></span>には、<span class="r">会場全体<span class="f">かいじょうぜんたい</span></span>が うつし<span class="r">出<span class="f">だ</span></span>されて いる。<span class="en">The screen shows the whole stadium.</span></div></div><div class="line"><button class="play" data-a="s12" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">コート<span class="f">こーと</span></span><span class="r">全体<span class="f">ぜんたい</span></span>に <span class="r">広<span class="f">ひろ</span></span>がって いる <span class="r">両<span class="f">りょう</span></span><span class="r">チーム<span class="f">ちーむ</span></span>の <span class="r">選手<span class="f">せんしゅ</span></span>たち、まんいんの <span class="r">観客席<span class="f">かんきゃくせき</span></span>。みんな <span class="r">後半<span class="f">こうはん</span></span>を <span class="r">待<span class="f">ま</span></span>って いる。<span class="en">Both teams' players spread across the whole pitch, and the packed stands. Everyone is waiting for the second half.</span></div></div></div><div class="card" style="margin-bottom:10px"><div class="para-h"><span class="n">②</span><span class="l">Close-up</span></div><div class="line"><button class="play" data-a="s21" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">後半<span class="f">こうはん</span></span>が <span class="r">始<span class="f">はじ</span></span>まる。<span class="r">画面<span class="f">がめん</span></span>は、<span class="r">コート<span class="f">こーと</span></span>の <span class="r">中央<span class="f">ちゅうおう</span></span>に <span class="r">立<span class="f">た</span></span>つ <span class="r">選手<span class="f">せんしゅ</span></span>を うつし<span class="r">出<span class="f">だ</span></span>した。<span class="en">The second half begins. The screen shows the player standing in the middle of the pitch.</span></div></div><div class="line"><button class="play" data-a="s22" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">顔<span class="f">かお</span></span>を <span class="r">上<span class="f">あ</span></span>げて、<span class="r">ボール<span class="f">ぼーる</span></span>を ける <span class="r">方向<span class="f">ほうこう</span></span>を <span class="r">見<span class="f">み</span></span>て いる。<span class="en">He is looking up, at the direction he will kick the ball.</span></div></div></div><div class="card" style="margin-bottom:10px"><div class="para-h"><span class="n">③</span><span class="l">Definition + author's point</span></div><div class="line"><button class="play" data-a="s31" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">広<span class="f">ひろ</span></span>い はんいを うつす とり<span class="r">方<span class="f">かた</span></span>を「<span class="r">ルーズ<span class="f">るーず</span></span>」、ある <span class="r">部分<span class="f">ぶぶん</span></span>を <span class="r">大<span class="f">おお</span></span>きく うつす とり<span class="r">方<span class="f">かた</span></span>を「<span class="r">アップ<span class="f">あっぷ</span></span>」と いう。<span class="en">Showing a wide area is called ルーズ (wide shot); showing one part big is called アップ (close-up).</span></div></div><div class="line"><button class="play" data-a="s32" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="txt rb"><span class="r">何<span class="f">なに</span></span>かを <span class="r">伝<span class="f">つた</span></span>える ときには、<span class="r">アップ<span class="f">あっぷ</span></span>と <span class="r">ルーズ<span class="f">るーず</span></span>を <span class="r">選<span class="f">えら</span></span>んだり、<span class="r">組<span class="f">く</span></span>み<span class="r">合<span class="f">あ</span></span>わせたり することが <span class="r">大切<span class="f">たいせつ</span></span>。<span class="en">When you want to show something, it's important to choose and combine close-ups and wide shots.</span></div></div></div>
+  <div class="stage gold"><div class="no">3</div><div class="ttl">文しょうの かたち<span class="ten">How the text is built</span></div></div><div class="card struct"><div class="srow"><div class="sn">①</div><div class="sb"><div class="stag">EXAMPLE 1 — Wide shot (ルーズ)</div><div class="sen">The camera shows the whole stadium: all the players, all the fans. You can see everything at once, but each thing is small.</div><div class="sq">→ Question 2</div></div></div><div class="srow"><div class="sn">②</div><div class="sb"><div class="stag">EXAMPLE 2 — Close-up (アップ)</div><div class="sen">The camera shows one player, big. You can see his face and where he is looking — but you can't see the rest of the stadium.</div><div class="sq">→ Question 3</div></div></div><div class="srow"><div class="sn">③</div><div class="sb"><div class="stag">DEFINITION + THE AUTHOR'S POINT</div><div class="sen">First the author names the two ways: ルーズ = wide shot, アップ = close-up. Then he says what he thinks: to show something well, you should choose and combine both.</div><div class="sq">→ Question 4 (names) / Question 5(2) (his point = ウ)</div></div></div><div class="snotes"><div class="snote"><b class="rb">①と②は <span class="r">対比<span class="f">たいひ</span></span></b><span>① and ② are placed side by side to COMPARE them. That is what 対比 means. → Question 5(1): paragraphs 1 and 2.</span></div><div class="snote"><b class="rb"><span class="r">筆者<span class="f">ひっしゃ</span></span>の <span class="r">考<span class="f">かんが</span></span>えは さいごの <span class="r">文<span class="f">ぶん</span></span></b><span>In most cases, the author's opinion is in the LAST paragraph, in the LAST sentence. Read it first if you're stuck.</span></div></div></div>
+</main><audio id="a-w1" src="audio/w1.m4a?v=2" preload="none"></audio><audio id="a-w2" src="audio/w2.m4a?v=2" preload="none"></audio><audio id="a-w3" src="audio/w3.m4a?v=2" preload="none"></audio><audio id="a-w4" src="audio/w4.m4a?v=2" preload="none"></audio><audio id="a-s11" src="audio/s11.m4a?v=2" preload="none"></audio><audio id="a-s12" src="audio/s12.m4a?v=2" preload="none"></audio><audio id="a-s21" src="audio/s21.m4a?v=2" preload="none"></audio><audio id="a-s22" src="audio/s22.m4a?v=2" preload="none"></audio><audio id="a-s31" src="audio/s31.m4a?v=2" preload="none"></audio><audio id="a-s32" src="audio/s32.m4a?v=2" preload="none"></audio>
+<script>
+/* ---- 音声 ---- */
+let current = null;
+document.querySelectorAll(".play").forEach(btn => btn.addEventListener("click", () => {
+  const a = document.getElementById("a-" + btn.dataset.a);
+  if (current && current !== a) { current.pause(); current.currentTime = 0; document.querySelectorAll(".play.playing").forEach(p => p.classList.remove("playing")); }
+  if (!a.paused) { a.pause(); a.currentTime = 0; btn.classList.remove("playing"); current = null; return; }
+  current = a; btn.classList.add("playing"); a.onended = () => btn.classList.remove("playing");
+  a.play().catch(() => btn.classList.remove("playing"));
+}));
+/* ---- なぞり書き canvas ---- */
+document.querySelectorAll(".trace").forEach(cv => {
+  const word = cv.dataset.word, wrap = cv.parentElement, cnt = wrap.querySelector(".cnt"), clr = wrap.querySelector(".clear");
+  const ctx = cv.getContext("2d"); let dpr = window.devicePixelRatio || 1, W = 0, H = 0, drawing = false, dirty = false; const slots = new Set();
+  function layout() {
+    W = cv.clientWidth; H = Math.round(W * 0.2); cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const fs = Math.min(H * 0.62, (W / 3 - 12) / Math.max(word.length, 1) * 1.1);
+    ctx.font = "700 " + fs + "px -apple-system, 'Hiragino Sans', sans-serif"; ctx.fillStyle = "#cfd8d3"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (let i = 0; i < 3; i++) ctx.fillText(word, W / 6 + i * (W / 3), H / 2);
+    ctx.strokeStyle = "#e5e9e6"; ctx.lineWidth = 1; for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(i * W / 3, 8); ctx.lineTo(i * W / 3, H - 8); ctx.stroke(); }
+    ctx.strokeStyle = "#16643f"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  }
+  layout(); new ResizeObserver(() => { if (!dirty) layout(); }).observe(cv);
+  const pos = e => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top]; };
+  const start = e => { e.preventDefault(); drawing = true; dirty = true; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
+  const move = e => { if (!drawing) return; e.preventDefault(); const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); slots.add(Math.min(2, Math.floor(x / (W / 3)))); };
+  const end = () => { if (!drawing) return; drawing = false; const n = slots.size; cnt.dataset.n = n; cnt.textContent = "なぞった： " + n + " / 3"; cnt.classList.toggle("ok", n === 3); };
+  cv.addEventListener("touchstart", start, {passive: false}); cv.addEventListener("touchmove", move, {passive: false}); cv.addEventListener("touchend", end);
+  cv.addEventListener("mousedown", start); cv.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
+  clr.addEventListener("click", () => { dirty = false; slots.clear(); cnt.dataset.n = 0; cnt.textContent = "なぞった： 0 / 3"; cnt.classList.remove("ok"); layout(); });
+});
+</script></body></html>
