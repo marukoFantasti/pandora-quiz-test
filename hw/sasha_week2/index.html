@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>けいさん と ばいおりん</title>
+<style>
+:root { --bg:#f7f9f7; --card:#fff; --ink:#171c1a; --pitch:#16643f; --gold:#b8860b; --line:#dfe5e1; --mut:#7a827e; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,"Hiragino Sans","Noto Sans CJK JP",sans-serif; background:var(--bg); color:var(--ink); padding-bottom:40px; }
+header { position:sticky; top:0; z-index:5; background:var(--pitch); color:#fff; padding:calc(env(safe-area-inset-top) + 12px) 16px 10px; }
+header h1 { font-size:17px; letter-spacing:.04em; } header .who { font-size:12px; opacity:.85; }
+.tabs { display:flex; gap:6px; margin-top:10px; }
+.tabs button { flex:1; border:none; border-radius:8px; padding:9px 0; font-size:14px; font-weight:700; background:rgba(255,255,255,.18); color:#fff; font-family:inherit; }
+.tabs button.on { background:#fff; color:var(--pitch); }
+main { padding:14px 14px 0; max-width:640px; margin:0 auto; }
+.rule { background:#e8f0ea; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.6; margin-bottom:8px; }
+.rule .en { display:block; color:var(--mut); font-size:12px; font-style:italic; margin-top:3px; }
+.parent { margin:0 0 14px; border:1px solid #d9d3e6; background:#f3f0f8; border-radius:10px; overflow:hidden; }
+.parent summary { list-style:none; cursor:pointer; padding:9px 12px; font-size:12.5px; font-weight:700; color:#5a3a7a; display:flex; align-items:center; }
+.parent summary::-webkit-details-marker { display:none; } .parent summary::after { content:"▾"; margin-left:auto; }
+.parent[open] summary::after { content:"▴"; }
+.parent .body { padding:0 12px 10px; font-size:12.5px; line-height:1.6; color:#3d2e4f; }
+.parent h5 { font-size:11px; letter-spacing:.08em; color:#5a3a7a; margin:6px 0 3px; }
+.parent ul { list-style:none; } .parent li { padding:2px 0 2px 12px; position:relative; }
+.parent li::before { content:"▶"; position:absolute; left:0; top:6px; font-size:5.5px; color:#5a3a7a; }
+.stage { display:flex; align-items:center; gap:8px; margin:16px 0 8px; }
+.stage .no { flex:none; width:24px; height:24px; border-radius:50%; background:var(--pitch); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.stage.gold .no { background:var(--gold); } .stage .ttl { font-size:15px; font-weight:800; }
+.stage .hint { font-size:11px; color:var(--mut); margin-left:auto; text-align:right; line-height:1.3; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.line { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
+.line:last-child { border-bottom:none; }
+.line .txt { flex:1; font-size:19px; line-height:1.6; }
+.line .txt .en { display:block; font-size:12px; color:var(--mut); font-style:italic; line-height:1.4; margin-top:2px; }
+.line .txt .wds { display:block; margin-top:2px; }
+.wd { display:inline-block; font-size:12px; color:var(--mut); margin-right:10px; } .wd i { font-style:italic; color:#98a09c; }
+.en-words .en { display:none !important; } .en-none .en, .en-none .wds { display:none !important; } .en-full .wds { display:none !important; }
+.line .drillrow { display:flex; flex:1; } .line .drillrow span { flex:1; text-align:center; font-size:19px; }
+.line .drillrow.pair span { font-size:17px; } .line .drillrow.pair i { font-style:normal; color:#bbb; margin:0 6px; }
+.play { flex:none; width:46px; height:46px; border-radius:50%; border:none; background:var(--pitch); color:#fff; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.play svg { width:24px; height:24px; margin-left:2px; } .play.playing { background:var(--gold); }
+.play.playing .w1 { animation:wv 1s ease-in-out infinite; } .play.playing .w2 { animation:wv 1s ease-in-out infinite .25s; }
+@keyframes wv { 0%,100% { opacity:1; } 50% { opacity:.15; } }
+.r { position:relative; display:inline-block; }
+.r .f { position:absolute; top:-.95em; left:-1em; right:-1em; font-size:10px; text-align:center; white-space:nowrap; color:var(--mut); line-height:1; }
+.hide-f .r .f { visibility:hidden; } .kanji .line .txt, .line .txt.rb { line-height:2.1; padding-top:6px; }
+.toggle { font-size:12px; color:var(--pitch); background:none; border:1px solid var(--pitch); border-radius:14px; padding:4px 10px; font-family:inherit; }
+.chk { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); font-size:16px; }
+.chk:last-child { border-bottom:none; } .chk input { width:22px; height:22px; accent-color:var(--pitch); }
+.chk.done { color:var(--mut); text-decoration:line-through; }
+.done-banner { margin-top:14px; text-align:center; padding:14px; border-radius:12px; background:#e8f0ea; color:var(--pitch); font-weight:700; display:none; }
+.done-banner.show { display:block; }
+.foot { margin-top:22px; font-size:11px; color:var(--mut); text-align:center; line-height:1.6; }
+
+.wgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.wcard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 10px 12px; }
+.wcard .top { display:flex; align-items:center; gap:10px; }
+.wcard .meta { flex:1; min-width:0; }
+.wcard .ja { font-size:22px; line-height:1.35; letter-spacing:.04em; }
+.wcard .kana { font-size:12px; color:var(--mut); }
+.wcard .en { display:block; font-size:12px; color:var(--mut); font-style:italic; }
+.wcard .play { width:40px; height:40px; } .wcard .play svg { width:21px; height:21px; }
+.mora { display:flex; align-items:center; gap:8px; margin-top:7px; padding-top:6px; border-top:1px dotted var(--line); }
+.mora .dots { display:flex; gap:4px; flex:1; }
+.mora .m { width:26px; height:26px; border-radius:50%; background:#eef3ef; color:var(--pitch);
+           font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.mora .cn { font-size:11px; color:var(--mut); text-align:right; }
+.mora .cn i { display:block; font-style:italic; font-size:9.5px; }
+.frame { margin-top:8px; padding:7px 10px; background:#eef3ef; border-radius:9px; font-size:13px; font-weight:700; color:var(--pitch); }
+.frame i { display:block; font-style:italic; font-size:11px; color:var(--mut); font-weight:400; margin-top:1px; }
+.wcard .kata { display:flex; align-items:center; gap:6px; font-size:15px; color:#5a6470; letter-spacing:.04em; margin-top:2px; }
+.wcard .kata .tag { font-size:9px; background:#eef1f4; color:#8a94a0; border-radius:6px; padding:1px 5px; letter-spacing:.06em; flex:none; }
+.cgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.ccard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 10px; }
+.sim { display:flex; align-items:center; justify-content:center; gap:10px; }
+.sim .k { font-size:46px; font-weight:700; line-height:1; color:var(--pitch); }
+.sim .arrow { font-size:18px; color:var(--mut); }
+.sim .h { font-size:34px; color:#9aa3af; line-height:1; }
+.sim.solo .k { font-size:46px; }
+.cnote { text-align:center; font-size:12px; margin-top:8px; color:#3d4a42; font-weight:600; }
+.cnote i { display:block; font-style:italic; font-weight:400; font-size:10.5px; color:var(--mut); margin-top:1px; }
+.cwords { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:7px; }
+.cwords .w { font-size:11px; background:#eef3ef; color:var(--pitch); border-radius:8px; padding:2px 7px; }
+.reads { display:flex; align-items:center; gap:6px; margin-top:8px; }
+.reads .lbl { font-size:11px; color:var(--mut); flex:1; }
+.reads .lbl i { display:block; font-style:italic; font-size:9.5px; }
+.dot3 { display:flex; gap:5px; }
+.dot3 button { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); background:#fff; font-family:inherit; font-size:11px; color:var(--mut); padding:0; }
+.dot3 button.on { background:var(--pitch); border-color:var(--pitch); color:#fff; font-weight:700; }
+.trace { display:block; width:100%; border:1.5px dashed #b9c4bd; border-radius:10px; background:#fff; touch-action:none; margin-top:8px; }
+.trace-bar { display:flex; align-items:center; justify-content:space-between; margin-top:5px; font-size:11px; color:var(--mut); }
+.trace-bar .cnt.ok { color:var(--pitch); font-weight:700; }
+.trace-bar .clear { font-size:11px; color:#8a3b3b; background:#fbeeee; border:1px solid #e3b9b9; border-radius:12px; padding:3px 10px; font-family:inherit; }
+.trace-bar .clear i { font-style:italic; font-size:9px; color:#b07070; margin-left:2px; }
+/* クイズ */
+.quiz { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; text-align:center; }
+.quiz .qtop { display:flex; align-items:center; justify-content:center; }
+.quiz .qtop .play { width:56px; height:56px; } .quiz .qtop .play svg { width:28px; height:28px; }
+.quiz .prog { font-size:12px; color:var(--mut); margin-top:8px; }
+.quiz .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:12px; }
+.quiz .grid button { padding:10px 4px 9px; border:1.5px solid var(--line); border-radius:10px; background:#fff; font-family:inherit; }
+.quiz .grid button .qk { display:block; font-size:17px; font-weight:700; letter-spacing:.03em; }
+.quiz .grid button .qh { display:block; font-size:11px; color:var(--mut); margin-top:2px; }
+.quiz .grid button.ok .qh { color:rgba(255,255,255,.85); }
+.quiz .grid button.ok { background:var(--pitch); border-color:var(--pitch); color:#fff; }
+.quiz .grid button.no { background:#fdf3f3; border-color:#e3b9b9; color:#a35; }
+.quiz .msg { margin-top:10px; font-size:14px; min-height:22px; font-weight:700; color:var(--pitch); }
+.quiz .again { margin-top:8px; font-size:12px; color:var(--pitch); background:none; border:1px solid var(--pitch); border-radius:14px; padding:5px 14px; font-family:inherit; }
+.quiz .qnote { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:13px; line-height:1.5; color:var(--pitch); font-weight:600; }
+.quiz .qnote i { display:block; font-style:italic; font-size:11px; color:var(--mut); font-weight:400; margin-top:1px; }
+/* 文 */
+.mcard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; }
+.mcard .top { display:flex; align-items:center; gap:12px; }
+.mcard .ja { flex:1; font-size:19px; line-height:2.0; padding-top:6px; }
+.mcard .en { display:block; font-size:12px; color:var(--mut); font-style:italic; margin-top:2px; line-height:1.4; }
+.choices { display:grid; grid-template-columns:repeat(auto-fit, minmax(72px, 1fr)); gap:6px; margin-top:10px; }
+.choices button { padding:11px 4px; font-size:18px; font-weight:700; border:1.5px solid var(--line); border-radius:10px; background:#fff; font-family:inherit; }
+.choices button.ok { background:var(--pitch); border-color:var(--pitch); color:#fff; }
+.choices button.no { background:#fdf3f3; border-color:#e3b9b9; color:#a35; }
+.mmsg { margin-top:8px; font-size:14px; min-height:20px; font-weight:700; color:var(--pitch); text-align:center; }
+.mnote { display:none; margin-top:8px; padding:8px 10px; background:#eef3ef; border-radius:9px; font-size:13px; line-height:1.5; color:#3d4a42; }
+.mnote i { display:block; font-style:italic; font-size:11px; color:var(--mut); margin-top:2px; }
+.mcard.done .mnote { display:block; }
+.scard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; }
+.scard .top { display:flex; align-items:center; gap:12px; }
+.scard .ja { flex:1; font-size:20px; line-height:2.0; padding-top:6px; }
+.scard .en { display:block; font-size:12px; color:var(--mut); font-style:italic; margin-top:2px; line-height:1.4; }
+.imgchk { margin-top:10px; width:100%; border:1.5px dashed var(--gold); background:#fffdf5; border-radius:10px; padding:9px; font-size:13px; color:#7a5a12; font-family:inherit; font-weight:600; }
+.imgchk i { display:block; font-style:italic; font-size:11px; color:var(--mut); font-weight:400; margin-top:1px; }
+.imgchk.on { background:var(--gold); border-style:solid; color:#fff; } .imgchk.on i { color:rgba(255,255,255,.85); }
+header h1 .hen { display:block; font-size:11px; font-weight:400; opacity:.8; font-style:italic; letter-spacing:0; margin-top:1px; }
+header .who i { font-style:italic; opacity:.75; margin-left:6px; }
+.stage .ttl .ten { display:block; font-size:11px; font-weight:400; color:var(--mut); font-style:italic; letter-spacing:0; }
+</style></head><body>
+<header><h1>けいさん と ばいおりん<span class="hen">Maths and violin</span></h1>
+<div class="who">だい2しゅう<i>Week 2</i>　紗々ちゃん</div></header>
+<main>
+  <div class="rule"><b>やりかた</b>　1日 5ふん。おんせいを きいて、こえに 出して 3かい よむ。よんだら ○を タップ。②の クイズは まいにち やってみよう。<span class="en">5 minutes a day. Listen, read it out loud 3 times, tapping a circle each time. Try the quiz every day.</span></div>
+  <details class="parent"><summary>保護者の方へ ── 今週のねらい</summary><div class="body"><ul><li>前回の授業で、数字は42まで読めました。足し算・かけ算も日本語で答えられました。今週はその言葉を固めます。</li><li>①は計算の言葉4つ。②はそれを聞き分けるクイズです。何度でも遊べます。</li><li>③は前回の文に「はやく」「ゆっくり」を足したものと、スライムの文です。「わたしは」の「は」は「わ」と読みます（授業で説明済み）。</li><li>次回は「わたしは ○○を つくる」を紗々ちゃんの言葉に入れかえます。スライムのほかに作りたいものがあれば、聞いておいてください。</li></ul></div></details>
+  <div class="stage "><div class="no">1</div><div class="ttl">けいさんの ことば<span class="ten">Maths words</span></div><div class="hint">きいて、3かい よむ<br><i>Listen, then read 3 times</i></div></div><div class="wgrid"><div class="wcard"><div class="top"><button class="play " data-a="w1_1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="meta"><div class="ja">たす</div><span class="en">plus (+)</span></div></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div><div class="wcard"><div class="top"><button class="play " data-a="w1_2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="meta"><div class="ja">ひく</div><span class="en">minus (−)</span></div></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div><div class="wcard"><div class="top"><button class="play " data-a="w1_3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="meta"><div class="ja">かける</div><span class="en">times (×)</span></div></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div><div class="wcard"><div class="top"><button class="play " data-a="w1_4" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="meta"><div class="ja">わる</div><span class="en">divided by (÷)</span></div></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div></div><div class="stage "><div class="no">2</div><div class="ttl">ききとり クイズ<span class="ten">Listening quiz</span></div><div class="hint">きこえた ことばを タップ<br><i>Tap the word you hear</i></div></div><div class="quiz" id="quiz" data-rounds="6"><div class="qtop"><button class="play qplay" data-a="q" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button></div><div class="prog" id="qprog"></div><div class="grid" id="qgrid"><button data-id="w1_1"><span class="qk">たす</span></button><button data-id="w1_2"><span class="qk">ひく</span></button><button data-id="w1_3"><span class="qk">かける</span></button><button data-id="w1_4"><span class="qk">わる</span></button></div><div class="msg" id="qmsg"></div><button class="again" id="qagain" style="display:none">もういちど <i>Again</i></button><div class="qnote">まいにち やってみよう。なんかいでも できるよ。<i>Try this every day — you can play as many times as you like.</i></div></div><div class="stage gold"><div class="no">3</div><div class="ttl">ぶん<span class="ten">Sentences</span></div><div class="hint">きいて、3かい よむ<br><i>Listen, then read it 3 times</i></div></div><div class="scard"><div class="top"><button class="play " data-a="s3_1" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="ja">わたしは ばいおりんを はやく ひく<span class="en">I play the violin fast.</span></div></div><div class="frame">〜を はやく ひく<i>play ～ fast</i></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div><div class="scard"><div class="top"><button class="play " data-a="s3_2" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="ja">わたしは ばいおりんを ゆっくり ひく<span class="en">I play the violin slowly.</span></div></div><div class="frame">〜を ゆっくり ひく<i>play ～ slowly</i></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div><div class="scard"><div class="top"><button class="play " data-a="s3_3" aria-label="きく"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 5a10 10 0 0 1 0 14"/></svg></button><div class="ja">わたしは すらいむを つくる<span class="en">I make slime.</span></div></div><div class="frame">〜を つくる<i>make ～</i></div><div class="reads"><span class="lbl">3かい よんだら タップ<i>Tap once each time you read it</i></span><span class="dot3"><button>1</button><button>2</button><button>3</button></span></div></div>
+</main><audio id="a-w1_1" src="audio/w1_1.m4a?v=2" preload="none"></audio><audio id="a-w1_2" src="audio/w1_2.m4a?v=2" preload="none"></audio><audio id="a-w1_3" src="audio/w1_3.m4a?v=2" preload="none"></audio><audio id="a-w1_4" src="audio/w1_4.m4a?v=2" preload="none"></audio><audio id="a-s3_1" src="audio/s3_1.m4a?v=2" preload="none"></audio><audio id="a-s3_2" src="audio/s3_2.m4a?v=2" preload="none"></audio><audio id="a-s3_3" src="audio/s3_3.m4a?v=2" preload="none"></audio><audio id="a-q" preload="none"></audio>
+<script>
+/* 音声 */
+let current = null;
+document.querySelectorAll(".play").forEach(btn => btn.addEventListener("click", () => {
+  const a = document.getElementById("a-" + btn.dataset.a);
+  if (current && current !== a) { current.pause(); current.currentTime = 0; document.querySelectorAll(".play.playing").forEach(p => p.classList.remove("playing")); }
+  if (!a.paused) { a.pause(); a.currentTime = 0; btn.classList.remove("playing"); current = null; return; }
+  current = a; btn.classList.add("playing"); a.onended = () => btn.classList.remove("playing");
+  a.play().catch(() => btn.classList.remove("playing"));
+}));
+/* 3かい よんだ */
+document.querySelectorAll(".dot3").forEach(g => {
+  const bs = [...g.querySelectorAll("button")];
+  bs.forEach((b, i) => b.addEventListener("click", () => {
+    const filled = b.classList.contains("on") && (i === bs.length - 1 || !bs[i + 1].classList.contains("on"));
+    bs.forEach((x, j) => x.classList.toggle("on", filled ? j < i : j <= i));
+  }));
+});
+/* えが うかんだ */
+document.querySelectorAll(".imgchk").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+/* なぞり書き */
+document.querySelectorAll(".trace").forEach(cv => {
+  const word = cv.dataset.word, ratio = parseFloat(cv.dataset.ratio), wrap = cv.parentElement,
+        cnt = wrap.querySelector(".cnt"), clr = wrap.querySelector(".clear"), ctx = cv.getContext("2d");
+  let dpr = window.devicePixelRatio || 1, W = 0, H = 0, drawing = false, dirty = false; const slots = new Set();
+  function layout() {
+    W = cv.clientWidth; H = Math.round(W * ratio); cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const fs = Math.min(H * 0.6, (W / 3 - 8) / Math.max(word.length, 1) * 1.15);
+    ctx.font = "700 " + fs + "px -apple-system, 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = "#cfd8d3"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (let i = 0; i < 3; i++) ctx.fillText(word, W / 6 + i * (W / 3), H / 2);
+    ctx.strokeStyle = "#e5e9e6"; ctx.lineWidth = 1;
+    for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(i * W / 3, 5); ctx.lineTo(i * W / 3, H - 5); ctx.stroke(); }
+    ctx.strokeStyle = "#16643f"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  }
+  layout(); new ResizeObserver(() => { if (!dirty) layout(); }).observe(cv);
+  const pos = e => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top]; };
+  const start = e => { e.preventDefault(); drawing = true; dirty = true; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
+  const move = e => { if (!drawing) return; e.preventDefault(); const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); slots.add(Math.min(2, Math.floor(x / (W / 3)))); };
+  const end = () => { if (!drawing) return; drawing = false; const n = slots.size; cnt.dataset.n = n; cnt.textContent = "なぞった： " + n + " / 3"; cnt.classList.toggle("ok", n === 3); };
+  cv.addEventListener("touchstart", start, {passive:false}); cv.addEventListener("touchmove", move, {passive:false}); cv.addEventListener("touchend", end);
+  cv.addEventListener("mousedown", start); cv.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
+  clr.addEventListener("click", () => { dirty = false; slots.clear(); cnt.dataset.n = 0; cnt.textContent = "なぞった： 0 / 3"; cnt.classList.remove("ok"); layout(); });
+});
+/* さんすう */
+document.querySelectorAll(".mcard").forEach(card => {
+  const msg = card.querySelector(".mmsg");
+  card.querySelectorAll(".choices button").forEach(b => b.addEventListener("click", () => {
+    if (card.classList.contains("done")) return;
+    if (b.dataset.ok === "1") { b.classList.add("ok"); msg.textContent = "せいかい！ Yes!"; card.classList.add("done"); }
+    else { b.classList.add("no"); msg.textContent = "もういちど かんがえてみよう"; setTimeout(() => b.classList.remove("no"), 700); }
+  }));
+});
+/* ききとりクイズ */
+const QIDS = ["w1_1", "w1_2", "w1_3", "w1_4"];
+(function () {
+  const box = document.getElementById("quiz"); if (!box) return;
+  const grid = document.getElementById("qgrid"), msg = document.getElementById("qmsg"),
+        prog = document.getElementById("qprog"), again = document.getElementById("qagain"),
+        qplay = box.querySelector(".qplay"), audio = document.getElementById("a-q");
+  const ROUNDS = Math.min(+box.dataset.rounds || 5, QIDS.length);
+  let order = [], idx = 0, score = 0, answered = false;
+  function newGame() {
+    order = QIDS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, ROUNDS);
+    idx = 0; score = 0; again.style.display = "none"; msg.textContent = ""; next();
+  }
+  function next() {
+    answered = false; grid.querySelectorAll("button").forEach(b => b.classList.remove("ok", "no"));
+    prog.textContent = (idx + 1) + " / " + ROUNDS; setTimeout(playNow, 250);
+  }
+  function playNow() {
+    const src = document.getElementById("a-" + QIDS[order[idx]]); if (!src) return;
+    audio.src = src.getAttribute("src"); audio.currentTime = 0;
+    qplay.classList.add("playing"); audio.onended = () => qplay.classList.remove("playing");
+    audio.play().catch(() => qplay.classList.remove("playing"));
+  }
+  qplay.addEventListener("click", playNow);
+  grid.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || answered) return;
+    if (b.dataset.id === QIDS[order[idx]]) {
+      answered = true; b.classList.add("ok"); score++; msg.textContent = "せいかい！ Yes!";
+      setTimeout(() => {
+        idx++;
+        if (idx >= ROUNDS) { prog.textContent = ""; msg.textContent = score + " / " + ROUNDS + "　よくできました！"; again.style.display = "inline-block"; }
+        else { msg.textContent = ""; next(); }
+      }, 900);
+    } else {
+      b.classList.add("no"); msg.textContent = "もういちど きいてみよう";
+      setTimeout(() => b.classList.remove("no"), 700);
+    }
+  });
+  again.addEventListener("click", newGame);
+  newGame();
+})();
+</script></body></html>
