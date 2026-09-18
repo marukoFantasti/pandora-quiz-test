@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>ポケモンの なまえ</title>
+<style>
+:root { --bg:#f7f9f7; --card:#fff; --ink:#171c1a; --pitch:#16643f; --line:#dfe5e1; --mut:#7a827e; --gold:#b8860b; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,"Hiragino Sans","Noto Sans CJK JP",sans-serif; background:var(--bg); color:var(--ink);
+       min-height:100vh; display:flex; flex-direction:column; }
+header { background:var(--pitch); color:#fff; padding:calc(env(safe-area-inset-top) + 14px) 16px 12px; }
+header h1 { font-size:17px; letter-spacing:.04em; } header .en { font-size:12px; opacity:.85; font-style:italic; }
+main { flex:1; padding:18px 16px 30px; max-width:520px; margin:0 auto; width:100%; }
+.big { width:100%; padding:22px 0; border:none; border-radius:16px; background:var(--pitch); color:#fff;
+        font-size:19px; font-weight:800; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:10px; }
+.big.playing { background:var(--gold); }
+.big svg { width:26px; height:26px; }
+.now { text-align:center; margin:16px 0 6px; font-size:26px; font-weight:700; min-height:38px; line-height:1.3; }
+.now .kata { display:block; font-size:14px; color:var(--mut); margin-top:2px; }
+.prog { text-align:center; font-size:12px; color:var(--mut); }
+.list { margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.list button { width:100%; display:flex; align-items:center; gap:12px; padding:13px 14px; border:none; border-bottom:1px solid var(--line);
+                background:#fff; font-family:inherit; text-align:left; font-size:17px; }
+.list button:last-child { border-bottom:none; }
+.list button.on { background:#eef3ef; }
+.list button .n { flex:none; width:24px; height:24px; border-radius:50%; background:#eef3ef; color:var(--pitch);
+                   font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.list button.on .n { background:var(--gold); color:#fff; }
+.list button .tx { flex:1; }
+.list button .tx i { display:block; font-size:11px; color:var(--mut); font-style:italic; margin-top:1px; }
+.foot { margin-top:20px; font-size:11px; color:var(--mut); text-align:center; line-height:1.6; }
+</style></head><body>
+<header><h1>ポケモンの なまえ</h1><div class="en">Pokémon names</div></header>
+<main>
+  <button class="big" id="all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg><span id="alllabel">ぜんぶ きく</span></button>
+  <div class="now" id="now">&nbsp;</div>
+  <div class="prog" id="prog"></div>
+  <div class="list" id="list"><button><span class="n">1</span><span class="tx">りおる<i>Riolu</i></span></button><button><span class="n">2</span><span class="tx">みみっきゅ<i>Mimikyu</i></span></button><button><span class="n">3</span><span class="tx">めがとーたんく<i>Mega Tortank / Mega Blastoise</i></span></button></div>
+  <div class="foot">1つずつ きくときは、下を タップ<br>Tap a line to hear it on its own</div>
+</main>
+<audio id="a0" src="../audio/w1_1.m4a?v=4" preload="auto"></audio><audio id="a1" src="../audio/w1_2.m4a?v=4" preload="auto"></audio><audio id="a2" src="../audio/w1_3.m4a?v=4" preload="auto"></audio>
+<script>
+const ITEMS = [{"main": "りおる", "sub": "リオル", "en": "Riolu"}, {"main": "みみっきゅ", "sub": "ミミッキュ", "en": "Mimikyu"}, {"main": "めがとーたんく", "sub": "メガトータンク", "en": "Mega Tortank / Mega Blastoise"}];
+const list = document.getElementById("list"), now = document.getElementById("now"),
+      prog = document.getElementById("prog"), all = document.getElementById("all"),
+      alllabel = document.getElementById("alllabel");
+let seq = false, idx = 0, cur = null;
+function show(i) {
+  [...list.children].forEach((b, j) => b.classList.toggle("on", j === i));
+  if (i < 0) { now.innerHTML = "&nbsp;"; prog.textContent = ""; return; }
+  const it = ITEMS[i];
+  now.innerHTML = it.main + (it.sub ? '<span class="kata">' + it.sub + '</span>' : "");
+  prog.textContent = (i + 1) + " / " + ITEMS.length;
+}
+function stop() { if (cur) { cur.pause(); cur.currentTime = 0; } cur = null; seq = false;
+  all.classList.remove("playing"); alllabel.textContent = "ぜんぶ きく"; show(-1); }
+function play(i, chain) {
+  if (cur) { cur.pause(); cur.currentTime = 0; }
+  const a = document.getElementById("a" + i); if (!a) return;
+  cur = a; idx = i; show(i); a.currentTime = 0;
+  a.onended = () => { if (chain && seq && idx + 1 < ITEMS.length) setTimeout(() => play(idx + 1, true), 900);
+                      else if (chain) stop(); else show(-1); };
+  a.play().catch(stop);
+}
+all.addEventListener("click", () => {
+  if (seq) { stop(); return; }
+  seq = true; all.classList.add("playing"); alllabel.textContent = "とめる"; play(0, true);
+});
+[...list.children].forEach((b, i) => b.addEventListener("click", () => {
+  if (seq) stop();
+  if (cur && idx === i) { stop(); return; }
+  play(i, false);
+}));
+</script></body></html>
